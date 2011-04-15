@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<ruleset name="b3cft">
+ <description>Coding standard for use on projects under the b3cft/kingkludge namespace.</description>
+ <exclude-pattern>*/Coverage/*</exclude-pattern>
+ <exclude-pattern>*/Other/*</exclude-pattern>
+ 
+ <!-- Include the whole PEAR standard -->
+ <rule ref="PEAR">
+    <exclude name="PEAR.Commenting.FileComment.InvalidPackage" />
+    <exclude name="PEAR.Commenting.ClassComment.InvalidPackage" />
+    <exclude name="PEAR.NamingConventions.ValidClassName.StartWithCaptial"/>
+    <exclude name="PEAR.NamingConventions.ValidVariableName.PrivateNoUnderscore"/>
+    <exclude name="PEAR.NamingConventions.ValidFunctionName.PrivateNoUnderscore"/>
+    <exclude name="PEAR.ControlStructures.ControlSignature"/>
+    <exclude name="PEAR.ControlStructures.MultiLineCondition.NewlineBeforeOpenBrace" />
+ </rule>
+
+ <!-- Include some sniffs from all around the place -->
+ <rule ref="Generic.Commenting.Todo"/>
+ <rule ref="Generic.ControlStructures.InlineControlStructure"/>
+ <rule ref="Generic.Formatting.DisallowMultipleStatements"/>
+ <rule ref="Generic.Formatting.SpaceAfterCast"/>
+ <rule ref="Generic.Functions.OpeningFunctionBraceBsdAllman"/>
+ <rule ref="Generic.NamingConventions.ConstructorName"/>
+ <rule ref="Generic.NamingConventions.UpperCaseConstantName"/>
+ <rule ref="Generic.Strings.UnnecessaryStringConcat"/>
+ <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
+ <rule ref="Generic.WhiteSpace.ScopeIndent"/>
+ <rule ref="Generic.Functions.FunctionCallArgumentSpacing"/>
+ <rule ref="Generic.Functions.OpeningFunctionBraceBsdAllman"/>
+ <rule ref="Generic.PHP.DisallowShortOpenTag"/>
+ <rule ref="Generic.WhiteSpace.DisallowTabIndent"/>
+ 
+ <rule ref="Squiz.WhiteSpace.ScopeClosingBrace"/>
+ <rule ref="Squiz.PHP.CommentedOutCode"/>
+ 
+ <rule ref="Zend.Files.ClosingTag"/>
+
+ <!-- Lines can be 100 chars long, show errors at 120 chars -->
+ <rule ref="Generic.Files.LineLength">
+  <properties>
+   <property name="lineLimit" value="100"/>
+   <property name="absoluteLineLimit" value="120"/>
+  </properties>
+ </rule>
+
+ <!-- Use Unix newlines -->
+ <rule ref="Generic.Files.LineEndings">
+  <properties>
+   <property name="eolChar" value="\n"/>
+  </properties>
+ </rule>
+
+</ruleset>

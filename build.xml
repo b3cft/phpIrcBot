@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="IRCBot" default="build" basedir=".">
+<property name="project" value="IRCBot"/>
+<property name="release.version" value="0.0.1"/>
+<property name="release.stability" value="devel"/>
+<property name="source" value="src"/>
+<property name="tests" value="src/tests"/>
+<property name="pearRepo" value="/var/www/b3cft.com/pear"/>
+<tstamp>
+    <format property="release.date" pattern="yyyy-MM-dd" locale="Europe/London"/>
+</tstamp>
+
+ <target name="clean"
+         description="Clean up and create artifact directories">
+  <delete dir="${basedir}/build/api"/>
+  <delete dir="${basedir}/build/code-browser"/>
+  <delete dir="${basedir}/build/coverage"/>
+  <delete dir="${basedir}/build/logs"/>
+  <delete dir="${basedir}/build/pdepend"/>
+  <delete dir="${basedir}/build/packages"/>
+
+  <mkdir dir="${basedir}/build/api"/>
+  <mkdir dir="${basedir}/build/code-browser"/>
+  <mkdir dir="${basedir}/build/coverage"/>
+  <mkdir dir="${basedir}/build/logs"/>
+  <mkdir dir="${basedir}/build/pdepend"/>
+  <mkdir dir="${basedir}/build/packages"/>
+ </target>
+
+ <target name="phpunit"
+         description="Run unit tests using PHPUnit and generates junit.xml and clover.xml">
+  <exec executable="phpunit" failonerror="true">
+    <arg line=" --coverage-html build/coverage 
+                --coverage-clover build/logs/clover.xml
+                --log-junit build/logs/junit.xml
+               ${tests}" />
+  </exec>
+ </target>
+
+ <target name="requires">
+    <exec executable="sudo">
+        <arg line="pear install 
+          gradwell/autoloader"/>
+    </exec>
+ </target>
+
+ <target name="parallelTasks"
+         description="Run the pdepend, phpmd, phpcpd, phpcs, phpdoc and phploc tasks in parallel using a maximum of 2 threads.">
+  <parallel threadCount="2">
+   <sequential>
+    <antcall target="pdepend"/>
+    <antcall target="phpmd"/>
+   </sequential>
+   <antcall target="phpcpd"/>
+   <antcall target="phpcs"/>
+   <antcall target="phpdoc"/>
+   <antcall target="phploc"/>
+  </parallel>
+ </target>
+
+ <target name="pdepend"
+         description="Generate jdepend.xml and software metrics charts using PHP_Depend">
+  <exec executable="pdepend">
+   <arg line="--jdepend-xml=${basedir}/build/logs/jdepend.xml
+              --jdepend-chart=${basedir}/build/pdepend/dependencies.svg
+              --overview-pyramid=${basedir}/build/pdepend/overview-pyramid.svg
+              ${source}/b3cft" />
+  </exec>
+ </target>
+
+ <target name="phpmd"
+         description="Generate pmd.xml using PHPMD">
+  <exec executable="phpmd">
+   <arg line="${source}/b3cft
+              xml
+              build/phpmd.xml
+              --reportfile ${basedir}/build/logs/pmd.xml" />
+  </exec>
+ </target>
+
+ <target name="phpcpd"
+         description="Generate pmd-cpd.xml using PHPCPD">
+  <exec executable="phpcpd">
+   <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml ${source}/b3cft" />
+  </exec>
+ </target>
+
+ <target name="phploc"
+         description="Generate phploc.csv">
+  <exec executable="phploc">
+   <arg line="--log-csv ${basedir}/build/logs/phploc.csv ${source}/b3cft" />
+  </exec>
+ </target>
+
+ <target name="phpcs"
+         description="Generate checkstyle.xml using PHP_CodeSniffer">
+  <exec executable="phpcs" output="/dev/null">
+   <arg line="--report=checkstyle
+              --report-file=${basedir}/build/logs/checkstyle.xml
+              --standard=build/phpcs.xml
+              ${source}" />
+  </exec>
+ </target>
+
+ <target name="phpdoc"
+         description="Generate API documentation using PHPDocumentor">
+  <exec executable="phpdoc">
+   <arg line="-d ${source}/b3cft -t ${basedir}/build/api" />
+  </exec>
+ </target>
+
+ <target name="phpcb"
+         description="Aggregate tool output with PHP_CodeBrowser">
+  <exec executable="phpcb">
+   <arg line="--log    ${basedir}/build/logs
+              --source ${source}/b3cft
+              --output ${basedir}/build/code-browser" />
+  </exec>
+ </target>
+ 
+ <target name="package">
+  <delete file="${basedir}/src/package.xml"/>
+  <copy file="${basedir}/build/package.xml" tofile="${basedir}/src/package.xml" />
+  <replace file="${basedir}/src/package.xml" token="@@version@@" value="${release.version}"/>
+  <replace file="${basedir}/src/package.xml" token="@@date@@" value="${release.date}"/>
+  <replace file="${basedir}/src/package.xml" token="@@stability@@" value="${release.stability}"/>
+  <exec executable="pear">
+    <arg line="package ${basedir}/src/package.xml" />
+  </exec>
+  <move file="Config-${release.version}.tgz" tofile="build/packages/Config-${release.version}.tgz"/>
+ </target>
+
+ <target name="release" depends="package">
+    
+    <exec executable="sudo" failonerror="false">
+        <arg line="pirum remove ${pearRepo} Config-${release.version}.tgz" />
+    </exec>
+    <exec executable="sudo">
+        <arg line="pirum add ${pearRepo} ${basedir}/build/packages/Config-${release.version}.tgz" />
+    </exec>
+ </target>
+ 
+  <target name="build" depends="clean,requires,parallelTasks,phpunit,phpcb"/>
+</project>

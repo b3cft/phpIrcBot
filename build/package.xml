@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package packagerversion="1.9.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0
+    http://pear.php.net/dtd/tasks-1.0.xsd
+    http://pear.php.net/dtd/package-2.0
+    http://pear.php.net/dtd/package-2.0.xsd">
+ <name>IRCBot</name>
+ <channel>pear.b3cft.com</channel>
+ <summary>Configuration class component</summary>
+ <description>None right now</description>
+ <lead>
+  <name>Andy "Bob" Brockhurst</name>
+  <user>b3cft</user>
+  <email>andy.brockhurst@b3cft.com</email>
+  <active>yes</active>
+ </lead>
+ <date>@@date@@</date>
+ <version>
+  <release>@@version@@</release>
+  <api>@@version@@</api>
+ </version>
+ <stability>
+  <release>@@stability@@</release>
+  <api>@@stability@@</api>
+ </stability>
+ <license>BSD License</license>
+ <notes>http://github.com/b3cft/config/README</notes>
+ <contents>
+  <dir name="/">
+   <dir name="b3cft">
+    <dir name="IRCBot">
+<!-- TBC 
+     <file baseinstalldir="/" name=".php" role="php">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+-->
+    </dir>
+   </dir>
+   <dir name="tests">
+<!-- TBC
+     <file name="Test.php" role="test">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+     <dir name="fixtures">
+      <file name="testLoadFromIniFile.ini" role="test" />
+      <file name="testLoadFromIniFileIntoGroup.ini" role="test" />
+      <file name="testLoadFromIniFileWhenInvalidIniFile.ini" role="test" />
+    </dir>
+-->
+   </dir>
+  </dir>
+ </contents>
+ <dependencies>
+  <required>
+   <php>
+    <min>5.3.0</min>
+   </php>
+   <pearinstaller>
+    <min>1.9.2</min>
+   </pearinstaller>
+  </required>
+  <optional />
+ </dependencies>
+ <phprelease>
+  <filelist>
+    <!-- remove the extraneous test directory -->
+<!-- TBC
+    <install as="ConfigTest.php" name="tests/ConfigTest.php" />
+    <install as="fixtures/testLoadFromIniFile.ini" name="tests/fixtures/testLoadFromIniFile.ini" />
+    <install as="fixtures/testLoadFromIniFileIntoGroup.ini" name="tests/fixtures/testLoadFromIniFileIntoGroup.ini" />
+    <install as="fixtures/testLoadFromIniFileWhenInvalidIniFile.ini" name="tests/fixtures/testLoadFromIniFileWhenInvalidIniFile.ini" />
+  </filelist>
+-->
+ </phprelease>
+ <changelog>
+    <release>
+     <version>@@version@@</version>
+     <date>@@date@@</date>
+     <stability>@@stability@@</stability>
+     <notes>Initial test release</notes>
+    </release>
+ </changelog>
+</package>
