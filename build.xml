@@ -31,17 +31,15 @@
  <target name="phpunit"
          description="Run unit tests using PHPUnit and generates junit.xml and clover.xml">
   <exec executable="phpunit" failonerror="true">
-    <arg line=" --coverage-html build/coverage 
-                --coverage-clover build/logs/clover.xml
-                --log-junit build/logs/junit.xml
-               ${tests}" />
+    <arg line="--configuration ${basedir}/build ${tests}" />
   </exec>
  </target>
 
  <target name="requires">
     <exec executable="sudo">
         <arg line="pear install 
-          gradwell/autoloader"/>
+          gradwell/autoloader
+          b3cft/config"/>
     </exec>
  </target>
 
