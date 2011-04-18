@@ -25,6 +25,7 @@
  <license>BSD License</license>
  <notes>http://github.com/b3cft/phpIrcBot</notes>
  <contents>
+ 
   <dir name="/">
    <dir name="b3cft">
     <dir name="IRCBot">
@@ -32,6 +33,14 @@
       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
      </file>
     </dir>
+   </dir>
+   <dir name="data">
+    <file name="ircbot.ini" role="data"/>
+   </dir>
+   <dir name="bin">
+    <file name="ircbot.php" role="script">
+      <tasks:replace from="@@DATA_DIR@@" to="data_dir" type="pear-config" />  
+    </file>
    </dir>
    <dir name="tests">
      <file name="IrcBotTest.php" role="test">
@@ -56,6 +65,8 @@
  </dependencies>
  <phprelease>
   <filelist>
+    <install as="ircbot" name="bin/ircbot.php" />
+    <install as="ircbot.ini" name="data/ircbot.ini" />
     <!-- remove the extraneous test directory -->
     <install as="IrcBotTest.php" name="tests/IrcBotTest.php" />
     <install as="fixtures/dummyConfig.ini" name="tests/fixtures/dummyConfig.ini" />
