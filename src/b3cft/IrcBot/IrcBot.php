@@ -73,15 +73,6 @@ class IrcBot
     }
 
     /**
-     * Prevent cloning
-     *
-     * @return void
-     */
-    private final function __clone()
-    {
-    }
-
-    /**
      * Singleton retrieve instance function
      *
      * @return IrcBot
@@ -105,6 +96,11 @@ class IrcBot
         $this->config = Registry::getInstance()->retrieve('Config');
     }
 
+    /**
+     * Reset the singleton for testing purposes.
+     *
+     * @return void
+     */
     public static function reset()
     {
         self::$instance = null;

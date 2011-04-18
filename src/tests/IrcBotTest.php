@@ -100,5 +100,43 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
 
         IrcBot::getInstance()->init();
 
+        $this->assertAttributeEquals(
+            $mockConfig,
+            'config',
+            IrcBot::getInstance(),
+            'MockConfig not compositied onto IrcBot'
+        );
+    }
+
+
+    /**
+     * Test reseting singleton for testing purposes
+     *
+     * @return void
+     */
+    public function testReset()
+    {
+        $mockConfig = $this->getMock(
+            'b3cft\CoreUtils\Config', /* Name of class         */
+            array(),                  /* Methods to mock       */
+            array(),                  /* Constructor arguments */
+            '',                       /* Name of mocked class  */
+            false                     /* Call the constructor  */
+        );
+
+        Registry::getInstance()->register('Config', $mockConfig);
+        IrcBot::getInstance()->init();
+        $this->assertAttributeEquals(
+            $mockConfig,
+            'config',
+            IrcBot::getInstance(),
+            'MockConfig not compositied onto IrcBot'
+        );
+        IrcBot::reset();
+        $this->assertAttributeEmpty(
+            'config',
+            IrcBot::getInstance(),
+            'Singleton not reset correctly'
+        );
     }
 }
