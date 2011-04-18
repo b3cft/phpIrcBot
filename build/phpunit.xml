@@ -27,7 +27,7 @@
 	</filter>
 	
 	<logging>
-	 <log type="coverage-html" target="coverage" title="Config"
+	 <log type="coverage-html" target="coverage" title="IRCBot"
 	      charset="UTF-8" yui="true" highlight="true"
           lowUpperBound="35" highLowerBound="70"/>
 	 <log type="coverage-clover" target="logs/clover.xml"/>
