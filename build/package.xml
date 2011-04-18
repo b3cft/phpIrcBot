@@ -5,7 +5,7 @@
     http://pear.php.net/dtd/package-2.0.xsd">
  <name>IRCBot</name>
  <channel>pear.b3cft.com</channel>
- <summary>Configuration class component</summary>
+ <summary>php base IRC Bot</summary>
  <description>None right now</description>
  <lead>
   <name>Andy "Bob" Brockhurst</name>
@@ -23,29 +23,23 @@
   <api>@@stability@@</api>
  </stability>
  <license>BSD License</license>
- <notes>http://github.com/b3cft/config/README</notes>
+ <notes>http://github.com/b3cft/phpIrcBot</notes>
  <contents>
   <dir name="/">
    <dir name="b3cft">
     <dir name="IRCBot">
-<!-- TBC 
-     <file baseinstalldir="/" name=".php" role="php">
+     <file name="IrcBot.php" role="php">
       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
      </file>
--->
     </dir>
    </dir>
    <dir name="tests">
-<!-- TBC
-     <file name="Test.php" role="test">
+     <file name="IrcBotTest.php" role="test">
       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
      </file>
      <dir name="fixtures">
-      <file name="testLoadFromIniFile.ini" role="test" />
-      <file name="testLoadFromIniFileIntoGroup.ini" role="test" />
-      <file name="testLoadFromIniFileWhenInvalidIniFile.ini" role="test" />
+      <file name="dummyConfig.ini" role="test" />
     </dir>
--->
    </dir>
   </dir>
  </contents>
@@ -63,13 +57,9 @@
  <phprelease>
   <filelist>
     <!-- remove the extraneous test directory -->
-<!-- TBC
-    <install as="ConfigTest.php" name="tests/ConfigTest.php" />
-    <install as="fixtures/testLoadFromIniFile.ini" name="tests/fixtures/testLoadFromIniFile.ini" />
-    <install as="fixtures/testLoadFromIniFileIntoGroup.ini" name="tests/fixtures/testLoadFromIniFileIntoGroup.ini" />
-    <install as="fixtures/testLoadFromIniFileWhenInvalidIniFile.ini" name="tests/fixtures/testLoadFromIniFileWhenInvalidIniFile.ini" />
+    <install as="IrcBotTest.php" name="tests/IrcBotTest.php" />
+    <install as="fixtures/dummyConfig.ini" name="tests/fixtures/dummyConfig.ini" />
   </filelist>
--->
  </phprelease>
  <changelog>
     <release>
