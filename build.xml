@@ -39,7 +39,7 @@
     <exec executable="sudo">
         <arg line="pear install 
           gradwell/autoloader
-          b3cft/config"/>
+          b3cft/CoreUtils"/>
     </exec>
  </target>
 
@@ -101,6 +101,14 @@
   </exec>
  </target>
 
+ <target name="codesniff"
+         description="Generate CodeSniffer visible report">
+  <exec executable="phpcs">
+   <arg line="--standard=build/phpcs.xml
+              ${source}" />
+  </exec>
+ </target>
+
  <target name="phpdoc"
          description="Generate API documentation using PHPDocumentor">
   <exec executable="phpdoc">
@@ -126,16 +134,16 @@
   <exec executable="pear">
     <arg line="package ${basedir}/src/package.xml" />
   </exec>
-  <move file="Config-${release.version}.tgz" tofile="build/packages/Config-${release.version}.tgz"/>
+  <move file="${project}-${release.version}.tgz" tofile="build/packages/${project}-${release.version}.tgz"/>
  </target>
 
  <target name="release" depends="package">
     
     <exec executable="sudo" failonerror="false">
-        <arg line="pirum remove ${pearRepo} Config-${release.version}.tgz" />
+        <arg line="pirum remove ${pearRepo} ${project}-${release.version}.tgz" />
     </exec>
     <exec executable="sudo">
-        <arg line="pirum add ${pearRepo} ${basedir}/build/packages/Config-${release.version}.tgz" />
+        <arg line="pirum add ${pearRepo} ${basedir}/build/packages/${project}-${release.version}.tgz" />
     </exec>
  </target>
  

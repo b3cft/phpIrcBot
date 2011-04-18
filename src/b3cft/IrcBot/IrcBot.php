@@ -41,7 +41,7 @@
  */
 
 namespace b3cft\IrcBot;
-use b3cft\Core\Config as Config;
+use b3cft\CoreUtils\Registry;
 
 /**
  * Utility class for storing and dealing with configuration data
@@ -59,6 +59,9 @@ class IrcBot
 {
 
     private static $instance;
+    public static $testing = false;
+
+    private $config;
 
     /**
      * Private constructor, use getInstance() to get IrcBot objectß
@@ -70,13 +73,22 @@ class IrcBot
     }
 
     /**
+     * Prevent cloning
+     *
+     * @return void
+     */
+    private final function __clone()
+    {
+    }
+
+    /**
      * Singleton retrieve instance function
      *
      * @return IrcBot
      */
     public static function getInstance()
     {
-        if (true === empty(self::$instance))
+        if (true === empty(self::$instance) || true === self::$testing)
         {
             self::$instance = new IrcBot();
         }
@@ -90,6 +102,11 @@ class IrcBot
      */
     public function init()
     {
+        $this->config = Registry::getInstance()->retrieve('Config');
+    }
 
+    public static function reset()
+    {
+        self::$instance = null;
     }
 }

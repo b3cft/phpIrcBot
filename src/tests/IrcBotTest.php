@@ -40,7 +40,8 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
-use b3cft\IrcBot\IrcBot as IrcBot, b3cft\Core\Config as Config;
+use b3cft\IrcBot\IrcBot,
+    b3cft\CoreUtils\Registry;
 
 /* Include PSR0 Autoloader and add dev path to search */
 require_once 'gwc.autoloader.php';
@@ -50,11 +51,20 @@ if (false === empty($devPath))
     __gwc_autoload_alsoSearch($devPath);
 }
 
+/**
+ *
+ *
+ * @author b3cft
+ * @covers b3cft\IrcBot\IrcBot
+ *
+ */
 class IrcBotTest extends PHPUnit_Framework_TestCase
 {
 
     /**
      * Test singleton method
+     *
+     * @covers b3cft\IrcBot\IrcBot::getInstance
      *
      * @return void
      */
@@ -62,6 +72,33 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
     {
         $ircBot = IrcBot::getInstance();
 
-        $this->assertInstanceOf('b3cft\IrcBot\IrcBot', $ircBot, 'Didn\'t get an instance of IrcBot from getInstance()');
+        $this->assertInstanceOf(
+            'b3cft\IrcBot\IrcBot',
+            $ircBot,
+            'Didn\'t get an instance of IrcBot from getInstance()'
+        );
+    }
+
+    /**
+     * Test Init
+     *
+     * @covers b3cft\IrcBot\IrcBot::init
+     *
+     * @return return_type
+     */
+    public function testInit()
+    {
+        $mockConfig = $this->getMock(
+            'b3cft\CoreUtils\Config', /* Name of class         */
+            array(),                  /* Methods to mock       */
+            array(),                  /* Constructor arguments */
+            '',                       /* Name of mocked class  */
+            false                     /* Call the constructor  */
+        );
+
+        Registry::getInstance()->register('Config', $mockConfig);
+
+        IrcBot::getInstance()->init();
+
     }
 }

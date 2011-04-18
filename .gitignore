@@ -5,4 +5,4 @@ build/code-browser
 build/pdepend
 build/coverage
 build/packages
-
+src/package.xml
