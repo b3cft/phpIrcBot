@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <project name="IRCBot" default="build" basedir=".">
 <property name="project" value="IRCBot"/>
-<property name="release.version" value="0.0.1"/>
+<property name="release.version" value="1.0.0"/>
 <property name="release.stability" value="devel"/>
+<property name="release.notes" value=""/>
 <property name="source" value="src"/>
-<property name="tests" value="src/tests"/>
+<property name="sourceCheck" value="src/b3cft"/>
 <property name="pearRepo" value="/var/www/b3cft.com/pear"/>
 <tstamp>
     <format property="release.date" pattern="yyyy-MM-dd" locale="Europe/London"/>
@@ -31,11 +31,19 @@
  <target name="phpunit"
          description="Run unit tests using PHPUnit and generates junit.xml and clover.xml">
   <exec executable="phpunit" failonerror="true">
-    <arg line="--configuration ${basedir}/build ${tests}" />
+    <arg line="--configuration ${basedir}/build" />
   </exec>
  </target>
 
  <target name="requires">
+    <exec executable="sudo">
+        <arg line="pear channel-discover 
+          pear.gradwell.com"/>
+    </exec>
+    <exec executable="sudo">
+        <arg line="pear channel-discover 
+          pear.b3cft.com"/>
+    </exec>
     <exec executable="sudo">
         <arg line="pear install 
           gradwell/autoloader
@@ -63,14 +71,14 @@
    <arg line="--jdepend-xml=${basedir}/build/logs/jdepend.xml
               --jdepend-chart=${basedir}/build/pdepend/dependencies.svg
               --overview-pyramid=${basedir}/build/pdepend/overview-pyramid.svg
-              ${source}/b3cft" />
+              ${sourceCheck}" />
   </exec>
  </target>
 
  <target name="phpmd"
          description="Generate pmd.xml using PHPMD">
   <exec executable="phpmd">
-   <arg line="${source}/b3cft
+   <arg line="${sourceCheck}
               xml
               build/phpmd.xml
               --reportfile ${basedir}/build/logs/pmd.xml" />
@@ -80,14 +88,14 @@
  <target name="phpcpd"
          description="Generate pmd-cpd.xml using PHPCPD">
   <exec executable="phpcpd">
-   <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml ${source}/b3cft" />
+   <arg line="--log-pmd ${basedir}/build/logs/pmd-cpd.xml ${sourceCheck}" />
   </exec>
  </target>
 
  <target name="phploc"
          description="Generate phploc.csv">
   <exec executable="phploc">
-   <arg line="--log-csv ${basedir}/build/logs/phploc.csv ${source}/b3cft" />
+   <arg line="--log-csv ${basedir}/build/logs/phploc.csv ${sourceCheck}" />
   </exec>
  </target>
 
@@ -112,7 +120,7 @@
  <target name="phpdoc"
          description="Generate API documentation using PHPDocumentor">
   <exec executable="phpdoc">
-   <arg line="-d ${source}/b3cft -t ${basedir}/build/api" />
+   <arg line="-d ${sourceCheck} -t ${basedir}/build/api" />
   </exec>
  </target>
 
@@ -120,7 +128,7 @@
          description="Aggregate tool output with PHP_CodeBrowser">
   <exec executable="phpcb">
    <arg line="--log    ${basedir}/build/logs
-              --source ${source}/b3cft
+              --source ${sourceCheck}
               --output ${basedir}/build/code-browser" />
   </exec>
  </target>
@@ -131,6 +139,7 @@
   <replace file="${basedir}/src/package.xml" token="@@version@@" value="${release.version}"/>
   <replace file="${basedir}/src/package.xml" token="@@date@@" value="${release.date}"/>
   <replace file="${basedir}/src/package.xml" token="@@stability@@" value="${release.stability}"/>
+  <replace file="${basedir}/src/package.xml" token="@@rel_notes@@" value="${release.notes}"/>
   <exec executable="pear">
     <arg line="package ${basedir}/src/package.xml" />
   </exec>

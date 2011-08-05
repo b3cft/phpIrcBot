@@ -61,6 +61,11 @@ class IrcBot
     private static $instance;
     public static $testing = false;
 
+    /**
+     * Container for config utility
+     *
+     * @var b3cft\CoreUtils\Config
+     */
     private $config;
 
     /**
@@ -94,6 +99,17 @@ class IrcBot
     public function init()
     {
         $this->config = Registry::getInstance()->retrieve('Config');
+
+        if (true === defined('DEFAULT_CONFIG') && true === realpath(DEFAULT_CONFIG))
+        {
+            $config = DEFAULT_CONFIG;
+        }
+        else
+        {
+            /* We're in dev so find the data file path */
+            $config = realpath(dirname(__FILE__).'/../../data/ircbot.ini');
+        }
+        $this->config->loadIniFile($config);
     }
 
     /**

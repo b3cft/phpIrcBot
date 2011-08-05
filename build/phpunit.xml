@@ -15,6 +15,12 @@
          strict="true"
          verbose="true">
 
+	<testsuites>
+	   <testsuite name="ircbot">
+	     <directory suffix="Test.php">../src/tests</directory>
+	   </testsuite>
+	</testsuites>
+
 	<filter>
 	  <blacklist>
 	    <directory suffix=".php">../src/tests</directory>

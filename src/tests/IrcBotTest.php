@@ -96,6 +96,8 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
             false                     /* Call the constructor  */
         );
 
+
+
         Registry::getInstance()->register('Config', $mockConfig);
 
         IrcBot::getInstance()->init();

@@ -60,6 +60,18 @@
    <pearinstaller>
     <min>1.9.2</min>
    </pearinstaller>
+   <package>
+    <name>Autoloader</name>
+    <channel>pear.gradwell.com</channel>
+    <min>2.0.0</min>
+    <max>2.99.999</max>
+   </package>
+   <package>
+    <name>CoreUtils</name>
+    <channel>pear.b3cft.com</channel>
+    <min>1.0.0</min>
+    <max>1.99.999</max>
+   </package>
   </required>
   <optional />
  </dependencies>
@@ -74,10 +86,19 @@
  </phprelease>
  <changelog>
     <release>
-     <version>@@version@@</version>
-     <date>@@date@@</date>
-     <stability>@@stability@@</stability>
-     <notes>Initial test release</notes>
+      <version>
+        <release>@@version@@</release>
+        <api>@@version@@</api>
+      </version>
+      <stability>
+        <release>@@stability@@</release>
+        <api>@@stability@@</api>
+      </stability>
+      <date>@@date@@</date>
+      <license>New BSD license</license>
+      <notes>
+@@rel_notes@@
+      </notes>
     </release>
  </changelog>
 </package>
