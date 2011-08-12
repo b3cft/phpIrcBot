@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="IRCBot" default="build" basedir=".">
 <property name="project" value="IRCBot"/>
-<property name="release.version" value="1.0.0"/>
+<property name="release.version" value="0.0.1"/>
 <property name="release.stability" value="devel"/>
 <property name="release.notes" value=""/>
 <property name="source" value="src"/>
@@ -144,6 +144,13 @@
     <arg line="package ${basedir}/src/package.xml" />
   </exec>
   <move file="${project}-${release.version}.tgz" tofile="build/packages/${project}-${release.version}.tgz"/>
+ </target>
+
+ <target name="install" depends="package">
+    <exec executable="sudo">
+        <arg line="pear install -f
+          build/packages/${project}-${release.version}.tgz"/>
+    </exec>    
  </target>
 
  <target name="release" depends="package">
