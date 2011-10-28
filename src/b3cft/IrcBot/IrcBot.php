@@ -36,7 +36,7 @@
  * @subpackage IrcBot
  * @author     Andy 'Bob' Brockhurst, <andy.brockhurst@b3cft.com>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://b3cft.github.com/phpIrcBot
+ * @link       http://github.com/b3cft
  * @version    @@PACKAGE_VERSION@@
  */
 
@@ -44,20 +44,19 @@ namespace b3cft\IrcBot;
 use b3cft\CoreUtils\Registry;
 
 /**
- * Utility class for storing and dealing with configuration data
- *
- * Stores config data in groups
+ * IrcBot implementation in PHP
  *
  * @category   PHP
  * @package    b3cft
- * @subpackage Core
+ * @subpackage IrcBot
  * @author     Andy 'Bob' Brockhurst, <andy.brockhurst@b3cft.com>
- * @license  http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link     http://github.com/b3cft/phpIRCBot
+ * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link       http://github.com/b3cft/phpIRCBot
  */
 class IrcBot
 {
 
+    const PARAM_CONFIG_FILE = 'configfile';
     private static $instance;
     public static $testing = false;
 
@@ -67,6 +66,13 @@ class IrcBot
      * @var b3cft\CoreUtils\Config
      */
     private $config;
+
+    /**
+     * Array of irc connections to maintain
+     *
+     * @var ircConnection[]
+     */
+    private $connectionList = array();
 
     /**
      * Private constructor, use getInstance() to get IrcBot objectß
@@ -94,13 +100,18 @@ class IrcBot
     /**
      * Initialise IrcBot
      *
+     * @param mixed $params - assoc array containing addition configuration information
+     *
      * @return void
      */
-    public function init()
+    public function init($params = array())
     {
         $this->config = Registry::getInstance()->retrieve('Config');
-
-        if (true === defined('DEFAULT_CONFIG') && true === realpath(DEFAULT_CONFIG))
+        if (false === empty($params[self::PARAM_CONFIG_FILE]))
+        {
+            $config = $params[self::PARAM_CONFIG_FILE];
+        }
+        else if (true === defined('DEFAULT_CONFIG') && false !== realpath(DEFAULT_CONFIG))
         {
             $config = DEFAULT_CONFIG;
         }
@@ -110,6 +121,60 @@ class IrcBot
             $config = realpath(dirname(__FILE__).'/../../data/ircbot.ini');
         }
         $this->config->loadIniFile($config);
+
+        $index = 0;
+        while (null !== ($connectionConf = $this->config->get('connection'.$index++))) {
+            $connectionConf         = array_merge($this->config->get('global'), $connectionConf);
+            $socket                 = new ircSocket($connectionConf[ircSocket::SERVER], $connectionConf[ircSocket::PORT]);
+            $this->connectionList[] = new ircConnection($connectionConf, $socket, $this);
+        }
+        $this->runConnections();
+    }
+
+    /**
+     * Run the irc connections, fork if necessary
+     *
+     * @return void
+     */
+    private function runConnections()
+    {
+        if (true === empty($this->connectionList))
+        {
+            //nothing to do, but we could fire up a command console in the future
+        }
+        elseif (1 === count($this->connectionList))
+        {
+            $connection = array_pop($this->connectionList);
+            $connection->run();
+        }
+        else
+        {
+            $childPid = array();
+            foreach($this->connectionList as $connection)
+            {
+                $pid = pcntl_fork();
+                if ($pid == -1)
+                {
+                    die("Stopping, could not Fork\n");
+                }
+                elseif(!$pid)
+                {
+                    /* I am a child, kill child when connection dies */
+                    $connection->run();
+                    exit(0);
+                }
+                else
+                {
+                    /* I am the parent, collect the PIDs */
+                    $childPid[] = $pid;
+                }
+            }
+            foreach ($childPid as $pid)
+            {
+                /* Wait for children to exit */
+                pcntl_waitpid($pid, $status);
+            }
+        }
     }
 
     /**
@@ -120,5 +185,13 @@ class IrcBot
     public static function reset()
     {
         self::$instance = null;
+    }
+
+    public function debugPrint($message, $debug=false)
+    {
+        if (true === $debug || $this->config->get('global', 'debug'))
+        {
+            echo print_r($message, true)."\n";
+        }
     }
 }

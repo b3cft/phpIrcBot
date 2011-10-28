@@ -110,6 +110,63 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * Test that default config constant is used if defined
+     *
+     * @return void
+     */
+    public function testInitWithConstant()
+    {
+        $mockConfig = $this->getMock(
+            'b3cft\CoreUtils\Config', /* Name of class         */
+            array(),                  /* Methods to mock       */
+            array(),                  /* Constructor arguments */
+            '',                       /* Name of mocked class  */
+            false                     /* Call the constructor  */
+        );
+
+        define('DEFAULT_CONFIG', dirname(__FILE__).'/fixtures/dummyConfig.ini');
+
+        Registry::getInstance()->register('Config', $mockConfig);
+
+        IrcBot::getInstance()->init();
+
+        $this->assertAttributeEquals(
+            $mockConfig,
+            'config',
+            IrcBot::getInstance(),
+            'MockConfig not compositied onto IrcBot'
+        );
+    }
+
+    /**
+     * Test init with a config file parameter uses the passed config file
+     *
+     * @return void
+     */
+    public function testInitWithParameter()
+    {
+        $mockConfig = $this->getMock(
+            'b3cft\CoreUtils\Config', /* Name of class         */
+            array(),                  /* Methods to mock       */
+            array(),                  /* Constructor arguments */
+            '',                       /* Name of mocked class  */
+            false                     /* Call the constructor  */
+        );
+
+        $params = array(IrcBot::PARAM_CONFIG_FILE => dirname(__FILE__).'/fixtures/dummyConfig.ini');
+
+        Registry::getInstance()->register('Config', $mockConfig);
+
+        IrcBot::getInstance()->init($params);
+
+        $this->assertAttributeEquals(
+            $mockConfig,
+            'config',
+            IrcBot::getInstance(),
+            'MockConfig not compositied onto IrcBot'
+        );
+    }
 
     /**
      * Test reseting singleton for testing purposes
