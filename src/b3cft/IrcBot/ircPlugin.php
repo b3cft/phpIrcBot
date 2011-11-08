@@ -33,79 +33,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package    b3cft
- * @subpackage IrcBot
+ * @subpackage
  * @author     Andy 'Bob' Brockhurst, <andy.brockhurst@b3cft.com>
  * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://github.com/b3cft
+ * @link       http://github.com/b3cft/
  * @version    @@PACKAGE_VERSION@@
  */
 
 namespace b3cft\IrcBot;
-use b3cft\CoreUtils\Registry;
 
-/**
- * IrcBot implementation in PHP
- *
- * @category   PHP
- * @package    b3cft
- * @subpackage IrcBot
- * @author     Andy 'Bob' Brockhurst, <andy.brockhurst@b3cft.com>
- * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
- * @link       http://github.com/b3cft/phpIRCBot
- */
-class ircSocket
+abstract class ircPlugin
 {
 
-    const PORT        = 'port';
-    const SERVER      = 'server';
-
-    private $socket;
-    private $server;
-    private $port;
-
-    /**
-     * Constructor. Initialised socket connection and assigned connection parameters.
-     *
-     * @param string $server - server or ip to connect to
-     * @param int    $port   - port on which to connect on
-     *
-     * @return ircSocket
-     */
-    public function __construct($server, $port)
-    {
-        $this->server = $server;
-        $this->port   = $port;
-        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-    }
-
-    public function connect()
-    {
-        return socket_connect($this->socket, $this->server, $this->port);
-    }
-
-    public function disconnect()
-    {
-        if (true === is_resource($this->socket))
-        {
-            socket_close($this->socket);
-        }
-    }
-
-    public function __destruct()
-    {
-        $this->disconnect();
-        $this->socket = null;
-    }
-
-    public function read()
-    {
-        $string = socket_read($this->socket, 1024, PHP_NORMAL_READ);
-        $string = trim($string, " \t\n\r\0\x0B");
-        return $string;
-    }
-
-    public function write($string)
-    {
-        socket_write($this->socket, $string."\n");
-    }
 }

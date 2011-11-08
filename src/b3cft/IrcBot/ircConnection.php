@@ -40,7 +40,6 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
-use b3cft\IrcBot\ircSocket;
 namespace b3cft\IrcBot;
 use b3cft\CoreUtils\Registry;
 
@@ -68,8 +67,17 @@ class ircConnection
     private $stack    = array();
     private $lastMsg  = 0;
 
+    private $listeners = array();
+
     private $disconnect         = false;
+
+    /**
+     * Message collections by user and channels (a user is a channel)
+     *
+     * @var ircMessage
+     */
     private $channels;
+
     private $connected          = false;
     private $reconnect          = true;
     private $reconnectwait      = 300;
@@ -77,6 +85,7 @@ class ircConnection
     private $connectRetries     = 5;
     private $join;
     private $nicks;
+    private $nick;
     private $pass;
     private $serverPass;
     /**
@@ -89,6 +98,9 @@ class ircConnection
     private $config;
     private $client;
 
+    private $uptime       = array();
+    private $messageCount = array();
+
     /**
      * Constructor. Initialised socket connection and assigned connection parameters.
      *
@@ -99,20 +111,21 @@ class ircConnection
      */
     public function __construct($configuration, ircSocket $socket, $client=null)
     {
-        $this->config     = $configuration;
-        $this->client     = $client;
-        $this->socket     = $socket;
-        $this->join       = (false === empty($configuration[self::JOIN]))
+        $this->config        = $configuration;
+        $this->client        = $client;
+        $this->socket        = $socket;
+        $this->join          = (false === empty($configuration[self::JOIN]))
             ? explode(',', $configuration[self::JOIN])
             : null;
-        $this->nicks      = explode(',', $configuration[self::NICK]);
-        $this->pass       = (false === empty($configuration[self::PASS]))
+        $this->nicks         = explode(',', $configuration[self::NICK]);
+        $this->pass          = (false === empty($configuration[self::PASS]))
             ? $configuration[self::PASS]
             : null;
-        $this->serverPass = (false === empty($configuration[self::SERVER_PASS]))
+        $this->serverPass    = (false === empty($configuration[self::SERVER_PASS]))
             ? $configuration[self::SERVER_PASS]
             : null;
-        $this->user       = $configuration[self::USER];
+        $this->user          = $configuration[self::USER];
+        $this->uptime['connection'] = time();
     }
 
     /**
@@ -123,6 +136,14 @@ class ircConnection
     public function __destruct()
     {
         $this->disconnect();
+    }
+
+    public function __get($name)
+    {
+        if (true === isset($this->$name))
+        {
+            return $this->$name;
+        }
     }
 
     /**
@@ -188,6 +209,7 @@ class ircConnection
             $this->writeline("NICK {$this->nicks[$nickIndex]}");
             if ('' === ($received = $this->readline()))
             {
+                $this->nick = $this->nicks[$nickIndex];
                 $this->debugPrint("Sending USER {$this->user}...");
                 $this->writeline("USER {$this->user} 0 * :php scripted bot by b3cft");
                 break;
@@ -197,9 +219,87 @@ class ircConnection
         $this->join();
     }
 
-    private function join($channels = null)
+    private function leave($channels)
     {
-        $this->writeline("JOIN #bots");
+        foreach ($channels as $channel)
+        {
+            if ('#' !== substr($channel, 0, 1))
+            {
+                $channel = '#'.$channel;
+            }
+            $this->writeline("PART $channel");
+        }
+    }
+
+    private function join($channel = null)
+    {
+        if (true === is_null($channel))
+        {
+            $channels = $this->join;
+        }
+        else
+        {
+            $channels = $channel;
+        }
+
+        foreach ($channels as $channel)
+        {
+            if ('#' !== substr($channel, 0, 1))
+            {
+                $channel = '#'.$channel;
+            }
+            $this->uptime[$channel] = time();
+            $this->writeline("JOIN $channel");
+        }
+
+    }
+
+    private function op($channel, $users)
+    {
+        $this->mode($channel, '+o', $users);
+    }
+
+    private function deop($channel, $users)
+    {
+        $this->mode($channel, '-o', $users);
+    }
+
+    private function voice($channel, $users)
+    {
+        $this->mode($channel, '+v', $users);
+    }
+
+    private function devoice($channel, $users)
+    {
+        $this->mode($channel, '-v', $users);
+    }
+
+    private function mode($channel, $mode, $users)
+    {
+        foreach ($users as $user)
+        {
+            $this->writeline("MODE $channel $mode $user");
+        }
+    }
+
+
+    private function uptime($to)
+    {
+        $this->writeline("PRIVMSG $to :I have been in the following channels for:");
+        foreach ($this->uptime as $channel=>$uptime)
+        {
+            $this->writeline("PRIVMSG $to :$channel : ".(time()-$uptime)."sec\n");
+        }
+    }
+
+    private function stats($to)
+    {
+        $this->uptime($to);
+        $this->writeline("PRIVMSG $to :I have seen in the following number of messages per channel/user:");
+        foreach ($this->messageCount as $channel=>$count)
+        {
+            $this->writeline("PRIVMSG $to :$channel : $count messages");
+        }
     }
 
     private function send()
@@ -217,50 +317,124 @@ class ircConnection
         $this->writeline('PONG :'.substr($received, 6));
     }
 
-    private function processMsg($received)
+    private function processMsg(ircMessage $message)
     {
-        $bits    = explode(' ', $received);
-        $from    = substr($bits[0], 1, strpos($bits[0], '!', 3)-1);
-        $to      = $bits[2];
-        $message = substr(implode(' ', array_slice($bits, 3)), 1);
-        if ('#' === substr($to, 0, 1))
+        $this->channels[$message->channel][] = $message;
+        if (true === empty($this->messageCount[$message->channel]))
         {
-            $replyTo = $to;
-        } else {
-            $replyTo = $from;
+            $this->messageCount[$message->channel] = 1;
         }
-        $response = "$from said $message";
-        switch (strtolower($message))
+        else
         {
-            case '!ping':
-               $replyTo  = $from;
-               $response = 'pong';
-            break;
-
-            case '!time':
-                $replyTo  = $from;
-                $response = date('Y/m/d H:i:s');
-            break;
-
-            case '!version':
-                $replyTo  = $from;
-                $response = 'b3cft\'s phpbot Version @@PACKAGE_VERSION@@';
-            break;
-
-            case '!quit':
-                return false;
-            break;
+            $this->messageCount[$message->channel]++;
         }
-        $this->writeline("PRIVMSG $replyTo : $response");
+        $this->lastMsg = time();
+
+        if (true === $message->isToMe)
+        {
+            $replyTo  = $message->from;
+            $messageParts = explode(' ', $message->message);
+            if (1 < count($messageParts))
+            {
+                $command = $messageParts[0];
+                $params  = array_slice($messageParts, 1);
+            }
+            else
+            {
+                $command = $message->message;
+                $params  = array();
+            }
+            switch (strtolower($command))
+            {
+                case 'join':
+                    if (0 === count($params))
+                    {
+                        $message = 'You need to tell me what channel to join!';
+                    }
+                    else
+                    {
+                        $this->join($params);
+                    }
+                break;
+
+                case 'leave':
+                case 'part':
+                    if (0 === count($params))
+                    {
+                        $this->leave(array($message->channel));
+                    }
+                    else
+                    {
+                        $this->leave($params);
+                    }
+                break;
+
+                case "ping":
+                   $response = "PONG";
+                break;
+
+                case "time":
+                    $response = date('Y-m-d H:i:s');
+                break;
+
+                case "version":
+                    $response = "b3cft's phpbot Version @@PACKAGE_VERSION@@\x01";
+                break;
+
+                case 'op':
+                case 'deop':
+                case 'voice':
+                case 'devoice':
+                    if (0 === count($params) && true === $message->isInChannel)
+                    {
+                        $this->$command($message->channel, array($message->from));
+                    }
+                    else if(true === $message->isInChannel)
+                    {
+                        $this->$command($message->channel, $params);
+                    }
+                    else if(2 <= count($params))
+                    {
+                        $this->$command($params[0], array_slice($params, 1));
+                    }
+                    else
+                    {
+                        print_r($params);
+                    }
+                break;
+
+                case 'kick':
+                break;
+
+                case 'uptime':
+                    $this->uptime($message->from);
+                break;
+
+                case 'stats':
+                    $this->stats($message->from);
+                break;
+
+                case '!quit':
+                    return false;
+                break;
+            }
+            if (false === empty($response))
+            {
+                $this->writeline("PRIVMSG $replyTo :$response");
+            }
+        }
     }
 
     private function talkIRC($received)
     {
         $return = true;
-        if('PING :' === substr($received, 0, 6)) {
+        if('PING :' === substr($received, 0, 6))
+        {
            $this->pong($received);
-        } else if(false !== stripos($received, 'PRIVMSG')) {
-            $return = $this->processMsg($received);
+        }
+        else if (false !== strpos($received, 'PRIVMSG'))
+        {
+            $return = $this->processMsg(new ircMessage($received, $this));
         }
         return (false === $return) ? false : true;
     }

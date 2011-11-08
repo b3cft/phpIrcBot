@@ -128,8 +128,37 @@ class IrcBot
             $socket                 = new ircSocket($connectionConf[ircSocket::SERVER], $connectionConf[ircSocket::PORT]);
             $this->connectionList[] = new ircConnection($connectionConf, $socket, $this);
         }
+        $this->registerPlugins();
         $this->runConnections();
     }
+
+    private function registerPlugins()
+    {
+        $path = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config->get('global', 'pluginpath'));
+        if (false === $path)
+        {
+            print('Plugins path not found '.dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config->get('global', 'pluginpath')."\n");
+            return;
+        }
+    	$handle = opendir($path);
+    	while (false !== ($plugin = readdir($handle)))
+    	{
+    		if (true === is_file($path.DIRECTORY_SEPARATOR.$plugin) && substr($plugin,-4) === '.php')
+    		{
+				include_once($path.DIRECTORY_SEPARATOR.$plugin);
+				$plugin = '\\'.substr($plugin, 0, -4); //to get around namespaceing issues.
+                $plugin = new $plugin($this->config->get($plugin));
+
+                if ($plugin->enabled)
+                {
+
+                }
+    		}
+    	}
+    	closedir($handle);
+
+    }
+
 
     /**
      * Run the irc connections, fork if necessary

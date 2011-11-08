@@ -58,7 +58,25 @@ class ircMessage
     private $channel;
     private $from;
     private $to;
+    private $message;
     private $raw;
+    private $action;
+    private $isToMe;
+    private $isInChannel;
+    private $time;
+    /**
+     * reference to the client
+     *
+     * @var ircConnection
+     */
+    private $client;
+
+    private static $watchedCommands = array(
+    	'PRIVMSG'=> true,
+        'JOIN'   => true,
+        'PART'	 => true,
+		'MODE'	 => true,
+    );
 
     /**
      * Constructor. Initialised socket connection and assigned connection parameters.
@@ -68,12 +86,36 @@ class ircMessage
      *
      * @return ircConnection
      */
-    public function __construct($raw)
+    public function __construct($raw, ircConnection $client)
     {
+        $this->client  = $client;
+        $this->raw     = $raw;
+        $this->time    = time();
         $bits          = explode(' ', $raw);
-        $this->from    = substr($bits[0], 1, strpos($bits[0], '!', 3)-1);
-        $this->to      = $bits[2];
-        $this->message = substr(implode(' ', array_slice($bits, 3)), 1);
+        if (3 < count($bits) && true == $this::$watchedCommands[$bits[1]])
+        {
+            $this->from    = substr($bits[0], 1, strpos($bits[0], '!', 3)-1);
+            $this->to      = $bits[2];
+            $this->action  = $bits[1];
+            $this->message = trim(substr(implode(' ', array_slice($bits, 3)), 1), " \t\n\r\0\x0B");
+            if ('#' === substr($this->to, 0, 1))
+            {
+                $this->channel     = $this->to;
+                $this->isInChannel = true;
+                $nick = $this->client->nick;
+                if (1 === preg_match("/^$nick:?\s+(.*)$/", $this->message, $match))
+                {
+                    $this->message = trim($match[1]);
+                    $this->isToMe  = true;
+                }
+            }
+            else
+            {
+                $this->channel     = $this->from;
+                $this->isInChannel = false;
+                $this->isToMe      = true;
+            }
+        }
     }
 
     public function __get($name)
