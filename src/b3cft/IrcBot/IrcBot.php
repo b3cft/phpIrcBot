@@ -146,12 +146,17 @@ class IrcBot
     		if (true === is_file($path.DIRECTORY_SEPARATOR.$plugin) && substr($plugin,-4) === '.php')
     		{
 				include_once($path.DIRECTORY_SEPARATOR.$plugin);
-				$plugin = '\\'.substr($plugin, 0, -4); //to get around namespaceing issues.
-                $plugin = new $plugin($this->config->get($plugin));
-
-                if ($plugin->enabled)
+				$pluginName  = substr($plugin, 0, -4);
+		        $pluginClass = '\\'.$pluginName; //to get around namespaceing issues.
+                foreach ($this->connectionList as $connection)
                 {
-
+                    $pluginConfig = $this->config->get($pluginName);
+		    	    if ('1' === $pluginConfig['enabled'])
+                    {
+                        $plugin = new $pluginClass($connection, $pluginConfig);
+                        $connection->registerPlugin($plugin);
+                    }
+                    $plugin = null;
                 }
     		}
     	}

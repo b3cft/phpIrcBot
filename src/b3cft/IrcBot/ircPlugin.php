@@ -41,8 +41,35 @@
  */
 
 namespace b3cft\IrcBot;
+use b3cft\IrcBot\ircConnection,
+    b3cft\IrcBot\ircMessage;
 
 abstract class ircPlugin
 {
 
+    protected $config;
+    /**
+     * Connection to irc server
+     *
+     * @var ircConnection
+     */
+    protected $client;
+
+    public function __construct(ircConnection $client, array $config)
+    {
+        $this->client = $client;
+        $this->config = $config;
+    }
+
+    public function __get($name)
+    {
+        if (true === isset($this->$name))
+        {
+            return $this->$name;
+        }
+    }
+
+    public abstract function process(ircMessage $message);
+
+    public abstract function getCommands();
 }

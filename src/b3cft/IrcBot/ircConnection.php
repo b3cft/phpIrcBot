@@ -98,6 +98,13 @@ class ircConnection
     private $config;
     private $client;
 
+    /**
+     * Plugins registered.
+     *
+     * @var ircPlugin[]
+     */
+    private $plugins = array();
+
     private $uptime       = array();
     private $messageCount = array();
 
@@ -231,6 +238,12 @@ class ircConnection
         }
     }
 
+
+    public function registerPlugin(ircPlugin $plugin)
+    {
+        $this->plugins[] = $plugin;
+    }
+
     private function join($channel = null)
     {
         if (true === is_null($channel))
@@ -252,6 +265,93 @@ class ircConnection
             $this->writeline("JOIN $channel");
         }
 
+    }
+
+    private function getCommands($to)
+    {
+        $commands = array('join', 'leave', 'voice', 'devoice', 'part', 'stats', 'uptime', 'kick', 'part', 'version', 'ping', '!quit');
+        $commands = array_merge($commands, $this->getDiskCommands());
+        foreach ($this->plugins as $plugin)
+        {
+            $commands = array_merge($commands, $plugin->getCommands());
+        }
+        sort($commands);
+
+        for ($i = 0, $max=count($commands); $i<$max; $i=$i+5)
+        {
+            $cmds = array_slice($commands, $i, 5);
+            $this->writeline("PRIVMSG $to :".implode(', ', $cmds));
+        }
+    }
+
+    private function getDiskCommands()
+    {
+        $path = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']);
+        if (false === $path)
+        {
+            print('Command path not found '.dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']."\n");
+            return array();
+        }
+        $commands = array();
+        $handle = opendir($path);
+    	while (false !== ($command = readdir($handle)))
+    	{
+    		if (true === is_file($path.DIRECTORY_SEPARATOR.$command) && is_executable($path.DIRECTORY_SEPARATOR.$command))
+    		{
+    	        $commands[] = '?'.pathinfo($path.DIRECTORY_SEPARATOR.$command, PATHINFO_FILENAME);
+    		}
+    	}
+    	return $commands;
+    }
+
+    private function executeDiskCommand($message)
+    {
+        $bits    = explode(' ', $message->message);
+        $command = substr(array_shift($bits),1);
+        $path    = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']);
+        if (false === $path)
+        {
+            print('Command path not found '.dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']."\n");
+        }
+        $exec = $path.DIRECTORY_SEPARATOR.$command;
+        if (pathinfo($exec, PATHINFO_DIRNAME) !== pathinfo($path.DIRECTORY_SEPARATOR.'.', PATHINFO_DIRNAME))
+        {
+            print("$message->from attempted to call $exec\n");
+            return;
+        }
+
+	    /**
+	     * $input = $_SERVER['argv'][1];
+         * $toks = explode(" ",$input);
+         * $nick = array_shift($toks);
+         * $channel = array_shift($toks);
+         * $sender = array_shift($toks);
+         * $first = array_shift($toks);
+	     */
+        $channel = $message->channel;
+        $from    = $message->from;
+        $to      = $message->from;
+
+	    if ($channel == $from)
+	    {
+	        $channel = 'null';
+	    }
+	    else
+	    {
+	        $to = $message->channel;
+	    }
+	    exec("$exec '$this->nick' '$channel' '$message->from' $message->message", $output, $return);
+        if (0 !== $return)
+        {
+            $this->writeline("PRIVMSG $to :command failed");
+        }
+        else
+        {
+            foreach($output as $line)
+            {
+                $this->writeline("PRIVMSG $to :$line");
+            }
+		}
     }
 
     private function op($channel, $users)
@@ -300,6 +400,7 @@ class ircConnection
         {
             $this->writeline("PRIVMSG $to :$channel : $count messages");
         }
+        $this->writeline("PRIVMSG $to :I have ".count($this->plugins).' plugins registered');
     }
 
     private function send()
@@ -317,6 +418,15 @@ class ircConnection
         $this->writeline('PONG :'.substr($received, 6));
     }
 
+    public function getMessageStack($channel)
+    {
+        if (false === empty($this->channels[$channel]))
+        {
+            return $this->channels[$channel];
+        }
+        return array();
+    }
+
     private function processMsg(ircMessage $message)
     {
         $this->channels[$message->channel][] = $message;
@@ -330,7 +440,16 @@ class ircConnection
         }
         $this->lastMsg = time();
 
-        if (true === $message->isToMe)
+        foreach ($this->plugins as $plugin)
+        {
+            $plugin->process($message);
+        }
+
+        if ('?' === substr($message->message, 0, 1))
+        {
+            $this->executeDiskCommand($message);
+        }
+        else if (true === $message->isToMe)
         {
             $replyTo  = $message->from;
             $messageParts = explode(' ', $message->message);
@@ -381,8 +500,8 @@ class ircConnection
                     $response = "b3cft's phpbot Version @@PACKAGE_VERSION@@\x01";
                 break;
 
-                case 'op':
-                case 'deop':
+                //case 'op':
+                //case 'deop':
                 case 'voice':
                 case 'devoice':
                     if (0 === count($params) && true === $message->isInChannel)
@@ -397,10 +516,10 @@ class ircConnection
                     {
                         $this->$command($params[0], array_slice($params, 1));
                     }
-                    else
-                    {
-                        print_r($params);
-                    }
+                break;
+
+                case 'commands':
+                    $this->getCommands($message->from);
                 break;
 
                 case 'kick':
@@ -460,7 +579,7 @@ class ircConnection
         $this->disconnect();
     }
 
-    private function writeline($string)
+    public function writeline($string)
     {
         $this->socket->write($string);
         $this->debugPrint('S '.$string);

@@ -40,18 +40,128 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
-use b3cft\IrcBot\ircMessage;
+use b3cft\IrcBot\ircMessage,
+    b3cft\IrcBot\ircConnection;
 
 class ops extends b3cft\IrcBot\ircPlugin
 {
-    private $enabled = false;
 
-    public function __get($name)
+    private $authUsers = array();
+
+    public function __construct(ircConnection $client, array $config)
     {
-        if (true === isset($this->$name))
+        parent::__construct($client, $config);
+        $this->authUsers = array_flip(explode(',',$config['users']));
+    }
+
+    public function process(ircMessage $message)
+    {
+        if (true === $message->isToMe)
         {
-            return $this->$name;
+            $messageParts = explode(' ', $message->message);
+            if (1 < count($messageParts))
+            {
+                $command = $messageParts[0];
+                $params  = array_slice($messageParts, 1);
+            }
+            else
+            {
+                $command = $message->message;
+                $params  = array();
+            }
+            switch (strtolower($command))
+            {
+                case 'op':
+                case 'deop':
+                    if (true === $this->isAuthorised($message->from))
+                    {
+                        if (0 === count($params) && true === $message->isInChannel)
+                        {
+                            $this->$command($message->channel, array($message->from));
+                        }
+                        else if(true === $message->isInChannel)
+                        {
+                            $this->$command($message->channel, $params);
+                        }
+                        else if(2 <= count($params))
+                        {
+                            $this->$command($params[0], array_slice($params, 1));
+                        }
+                    }
+                break;
+
+                case 'addop':
+                    if (true === $this->isAuthorised($message->from))
+                    {
+                        $this->addOp($params);
+                    }
+                break;
+
+                case 'delop':
+                    if (true === $this->isAuthorised($message->from))
+                    {
+                        $this->delOp($params);
+                    }
+                break;
+
+                case 'showops':
+                    $ops = implode(', ', array_keys($this->authUsers));
+                    $this->client->writeline("PRIVMSG $message->from : The following users have permissions to give/take ops:");
+                    $this->client->writeline("PRIVMSG $message->from : $ops.");
+                break;
+            }
         }
     }
 
+    private function addOp(array $users)
+    {
+        foreach ($users as $user)
+        {
+            $this->authUsers[$user] = 1;
+        }
+    }
+
+    private function delOp(array $users)
+    {
+        foreach ($users as $user)
+        {
+            unset($this->authUsers[$user]);
+        }
+    }
+
+    private function isAuthorised($user)
+    {
+        if (false === isset($this->authUsers[$user]))
+        {
+            $this->client->writeline("PRIVMSG $user : Sorry, you're not in my authorised users list.");
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    private function op($channel, $users)
+    {
+        $this->mode($channel, '+o', $users);
+    }
+
+    private function deop($channel, $users)
+    {
+        $this->mode($channel, '-o', $users);
+    }
+
+    private function mode($channel, $mode, $users)
+    {
+        foreach ($users as $user)
+        {
+            $this->client->writeline("MODE $channel $mode $user");
+        }
+    }
+
+    public function getCommands()
+    {
+        return array('op', 'deop', 'addop', 'delop', 'showops');
+    }
 }
