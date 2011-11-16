@@ -46,14 +46,6 @@ use b3cft\IrcBot\ircMessage,
 class ops extends b3cft\IrcBot\ircPlugin
 {
 
-    private $authUsers = array();
-
-    public function __construct(ircConnection $client, array $config)
-    {
-        parent::__construct($client, $config);
-        $this->authUsers = array_flip(explode(',',$config['users']));
-    }
-
     public function process(ircMessage $message)
     {
         if ('PRIVMSG' === $message->action && true === $message->isToMe)
@@ -146,19 +138,6 @@ class ops extends b3cft\IrcBot\ircPlugin
         foreach ($users as $user)
         {
             unset($this->authUsers[$user]);
-        }
-    }
-
-    private function isAuthorised($user)
-    {
-        if (false === isset($this->authUsers[$user]))
-        {
-            $this->client->writeline("PRIVMSG $user : Sorry, you're not in my authorised users list.");
-            return false;
-        }
-        else
-        {
-            return true;
         }
     }
 

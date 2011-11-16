@@ -55,10 +55,29 @@ abstract class ircPlugin
      */
     protected $client;
 
+    protected $authUsers = array();
+
     public function __construct(ircConnection $client, array $config)
     {
         $this->client = $client;
         $this->config = $config;
+        if (false === empty($this->config['users']))
+        {
+            $this->authUsers = array_flip(explode(',',$config['users']));
+        }
+    }
+
+    protected function isAuthorised($user)
+    {
+        if (false === isset($this->authUsers[$user]))
+        {
+            $this->client->writeline("PRIVMSG $user : Sorry, you're not in my authorised users list.");
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
 
     public function __get($name)
