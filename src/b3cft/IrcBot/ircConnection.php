@@ -80,7 +80,7 @@ class ircConnection
 
     private $connected          = false;
     private $reconnect          = true;
-    private $reconnectwait      = 300;
+    private $reconnectwait      = 30;
     private $connectRetriesMade = 0;
     private $connectRetries     = 5;
     private $join;
@@ -160,16 +160,25 @@ class ircConnection
      */
     private function connect()
     {
-        if (false === $this->connected)
+        while(false === $this->connected)
         {
             $this->debugPrint('Connecting...');
             $this->connected = $this->socket->connect();
-            if (false === $this->connected && true === $this->reconnect && $this->connectRetriesMade < $this->connectRetries) {
+            if (false === $this->connected && true === $this->reconnect && $this->connectRetriesMade < $this->connectRetries)
+            {
+                $this->debugPrint("Sleeping for $this->reconnectwait seconds...");
                 sleep($this->reconnectwait);
                 $this->connectRetriesMade++;
                 $this->connected = $this->socket->connect();
             }
-            $this->login();
+            else if ($this->connectRetriesMade >= $this->connectRetries)
+            {
+                die('I give up. Out of connection attempts');
+            }
+            if (true === $this->connected && false === $this->login())
+            {
+                $this->connected = false;
+            }
         }
         return $this->connected;
     }
@@ -213,17 +222,34 @@ class ircConnection
         while($nickIndex < count($this->nicks))
         {
             $this->debugPrint("Sending NICK {$this->nicks[$nickIndex]}...");
-            $this->writeline("NICK {$this->nicks[$nickIndex]}");
+            $status = $this->writeline("NICK {$this->nicks[$nickIndex]}");
+            if (false === $status)
+            {
+                $this->debugPrint('Connection failed...');
+                return false;
+            }
             if ('' === ($received = $this->readline()))
             {
+                if (false === $received)
+                {
+                    $this->debugPrint('Connection failed...');
+                    return false;
+                }
+
                 $this->nick = $this->nicks[$nickIndex];
                 $this->debugPrint("Sending USER {$this->user}...");
-                $this->writeline("USER {$this->user} 0 * :php scripted bot by b3cft");
+                $status = $this->writeline("USER {$this->user} 0 * :php scripted bot by b3cft");
+                if (false === $status)
+                {
+                    $this->debugPrint('Connection failed...');
+                    return false;
+                }
                 break;
             }
             $nickIndex++;
         }
         $this->join();
+        return true;
     }
 
     private function leave($channels)
@@ -581,9 +607,9 @@ class ircConnection
 
     public function writeline($string)
     {
-        $this->socket->write($string);
+        $status = $this->socket->write($string);
         $this->debugPrint('S '.$string);
-        return $string;
+        return $status;
     }
 
     private function readline()

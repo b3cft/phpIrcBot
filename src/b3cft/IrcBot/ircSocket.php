@@ -75,11 +75,19 @@ class ircSocket
     {
         $this->server = $server;
         $this->port   = $port;
-        $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+    }
+
+    private function create()
+    {
+        if (false === is_resource($this->socket))
+        {
+            $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+        }
     }
 
     public function connect()
     {
+        $this->create();
         return socket_connect($this->socket, $this->server, $this->port);
     }
 
@@ -87,6 +95,9 @@ class ircSocket
     {
         if (true === is_resource($this->socket))
         {
+            $arrOpt = array('l_onoff' => 1, 'l_linger' => 1);
+            socket_set_block($this->socket);
+            socket_set_option($this->socket, SOL_SOCKET, SO_LINGER, $arrOpt);
             socket_close($this->socket);
         }
     }
@@ -100,12 +111,15 @@ class ircSocket
     public function read()
     {
         $string = socket_read($this->socket, 1024, PHP_NORMAL_READ);
-        $string = trim($string, " \t\n\r\0\x0B");
+        if (false !== $string)
+        {
+            $string = trim($string, " \t\n\r\0\x0B");
+        }
         return $string;
     }
 
     public function write($string)
     {
-        socket_write($this->socket, $string."\n");
+        return socket_write($this->socket, $string."\n");
     }
 }
