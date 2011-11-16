@@ -455,16 +455,19 @@ class ircConnection
 
     private function processMsg(ircMessage $message)
     {
-        $this->channels[$message->channel][] = $message;
-        if (true === empty($this->messageCount[$message->channel]))
+        if ('PRIVMSG' === $message->action)
         {
-            $this->messageCount[$message->channel] = 1;
+            $this->channels[$message->channel][] = $message;
+            if (true === empty($this->messageCount[$message->channel]))
+            {
+                $this->messageCount[$message->channel] = 1;
+            }
+            else
+            {
+                $this->messageCount[$message->channel]++;
+            }
+            $this->lastMsg = time();
         }
-        else
-        {
-            $this->messageCount[$message->channel]++;
-        }
-        $this->lastMsg = time();
 
         foreach ($this->plugins as $plugin)
         {
@@ -577,7 +580,7 @@ class ircConnection
         {
            $this->pong($received);
         }
-        else if (false !== strpos($received, 'PRIVMSG'))
+        else if (0 !== preg_match('/(PRIVMSG|JOIN|PART|MODE)/', $received))
         {
             $return = $this->processMsg(new ircMessage($received, $this));
         }

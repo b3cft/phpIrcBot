@@ -56,7 +56,7 @@ class ops extends b3cft\IrcBot\ircPlugin
 
     public function process(ircMessage $message)
     {
-        if (true === $message->isToMe)
+        if ('PRIVMSG' === $message->action && true === $message->isToMe)
         {
             $messageParts = explode(' ', $message->message);
             if (1 < count($messageParts))

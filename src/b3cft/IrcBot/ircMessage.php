@@ -92,28 +92,44 @@ class ircMessage
         $this->raw     = $raw;
         $this->time    = time();
         $bits          = explode(' ', $raw);
-        if (3 < count($bits) && true == $this::$watchedCommands[$bits[1]])
+        if (3 <= count($bits) && false === empty($this::$watchedCommands[$bits[1]]))
         {
             $this->from    = substr($bits[0], 1, strpos($bits[0], '!', 3)-1);
-            $this->to      = $bits[2];
             $this->action  = $bits[1];
-            $this->message = trim(substr(implode(' ', array_slice($bits, 3)), 1), " \t\n\r\0\x0B");
-            if ('#' === substr($this->to, 0, 1))
+            switch ($this->action)
             {
-                $this->channel     = $this->to;
-                $this->isInChannel = true;
-                $nick = $this->client->nick;
-                if (1 === preg_match("/^$nick:?\s+(.*)$/", $this->message, $match))
-                {
-                    $this->message = trim($match[1]);
-                    $this->isToMe  = true;
-                }
-            }
-            else
-            {
-                $this->channel     = $this->from;
-                $this->isInChannel = false;
-                $this->isToMe      = true;
+                case 'MODE':
+                    $this->channel = $bits[2];
+                    $this->to      = isset($bits[4]) ? $bits[4] : '';
+                //yeah, no break
+                case 'JOIN':
+                case 'PART':
+                    $this->isInChannel = true;
+                    $this->channel     = substr($bits[2], 1);
+                break;
+
+                case 'PRIVMSG':
+                    $this->to      = $bits[2];
+                    $this->message = trim(substr(implode(' ', array_slice($bits, 3)), 1), " \t\n\r\0\x0B");
+                    if ('#' === substr($this->to, 0, 1))
+                    {
+                        $this->channel     = $this->to;
+                        $this->isInChannel = true;
+                        $nick = $this->client->nick;
+                        if (1 === preg_match("/^$nick:?\s+(.*)$/", $this->message, $match))
+                        {
+                            $this->message = trim($match[1]);
+                            $this->isToMe  = true;
+                        }
+                    }
+                    else
+                    {
+                        $this->channel     = $this->from;
+                        $this->isInChannel = false;
+                        $this->isToMe      = true;
+                    }
+
+                break;
             }
         }
     }

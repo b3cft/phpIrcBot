@@ -48,7 +48,7 @@ class subber extends b3cft\IrcBot\ircPlugin
 
     public function process(ircMessage $message)
     {
-        if (5 < strlen($message->message))
+        if ('PRIVMSG' === $message->action && 5 < strlen($message->message))
         {
             if ('s/' === substr($message->message, 0, 2))
             {
