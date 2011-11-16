@@ -1,0 +1,3 @@
+#!/bin/bash
+
+date +%p|sed s/am/Morning./|sed s/pm/Afternoon/
