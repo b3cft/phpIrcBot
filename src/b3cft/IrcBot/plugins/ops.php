@@ -85,7 +85,27 @@ class ops extends b3cft\IrcBot\ircPlugin
                         }
                         else if(2 <= count($params))
                         {
-                            $this->$command($params[0], array_slice($params, 1));
+                            if ('#' === substr($params[0], 0, 1))
+                            {
+                                $channel = $params[0];
+                            }
+                            else
+                            {
+                                $channel = '#'.$params[0];
+                            }
+                            $this->$command($channel, array_slice($params, 1));
+                        }
+                        else if (1 === count($params))
+                        {
+                            if ('#' === substr($params[0], 0, 1))
+                            {
+                                $channel = $params[0];
+                            }
+                            else
+                            {
+                                $channel = '#'.$params[0];
+                            }
+                            $this->$command($channel, array($message->from));
                         }
                     }
                 break;

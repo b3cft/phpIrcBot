@@ -582,7 +582,7 @@ class ircConnection
         }
         else if (0 !== preg_match('/(PRIVMSG|JOIN|PART|MODE)/', $received))
         {
-            $return = $this->processMsg(new ircMessage($received, $this));
+            $return = $this->processMsg(new ircMessage($received, $this->nick));
         }
         return (false === $return) ? false : true;
     }

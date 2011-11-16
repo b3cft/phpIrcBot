@@ -64,12 +64,7 @@ class ircMessage
     private $isToMe;
     private $isInChannel;
     private $time;
-    /**
-     * reference to the client
-     *
-     * @var ircConnection
-     */
-    private $client;
+    private $nick;
 
     private static $watchedCommands = array(
     	'PRIVMSG'=> true,
@@ -86,9 +81,9 @@ class ircMessage
      *
      * @return ircConnection
      */
-    public function __construct($raw, ircConnection $client)
+    public function __construct($raw, $nick)
     {
-        $this->client  = $client;
+        $this->nick    = $nick;
         $this->raw     = $raw;
         $this->time    = time();
         $bits          = explode(' ', $raw);
@@ -115,7 +110,7 @@ class ircMessage
                     {
                         $this->channel     = $this->to;
                         $this->isInChannel = true;
-                        $nick = $this->client->nick;
+                        $nick = $this->nick;
                         if (1 === preg_match("/^$nick:?\s+(.*)$/", $this->message, $match))
                         {
                             $this->message = trim($match[1]);
