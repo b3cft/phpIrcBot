@@ -119,6 +119,10 @@ class welcomer extends b3cft\IrcBot\ircPlugin
                     }
                 break;
 
+                case 'stats':
+                    $this->stats($message->from);
+                break;
+
                 case 'welcometopic':
                     if (true === $this->isAuthorised($message->from))
                     {
@@ -135,6 +139,15 @@ class welcomer extends b3cft\IrcBot\ircPlugin
                     }
                 break;
             }
+        }
+    }
+
+    private function stats($to)
+    {
+        $this->client->writeline("PRIVMSG $to :I know of the following users per channel:");
+        foreach ($this->channels as $channel=>$users)
+        {
+            $this->client->writeline("PRIVMSG $to :$channel : ".count($users));
         }
     }
 

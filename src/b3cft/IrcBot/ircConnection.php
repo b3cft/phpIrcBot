@@ -428,7 +428,7 @@ class ircConnection
         $this->writeline("PRIVMSG $to :I have the following uptime record:");
         foreach ($this->uptime as $channel=>$uptime)
         {
-            $this->writeline("PRIVMSG $to :$channel : ".$this->formatUptime($uptime)."\n");
+            $this->writeline("PRIVMSG $to :$channel : ".$this->formatUptime($uptime));
         }
     }
 
@@ -566,6 +566,10 @@ class ircConnection
                 break;
 
                 case 'kick':
+                break;
+
+                case 'help':
+                    $this->writeline("PRIVMSG {$message->channel} :".$this->config['helpurl']);
                 break;
 
                 case 'uptime':
