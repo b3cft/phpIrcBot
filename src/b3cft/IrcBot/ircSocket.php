@@ -87,8 +87,10 @@ class ircSocket
 
     public function connect()
     {
+        $this->disconnect();
+        usleep(5000);
         $this->create();
-        return socket_connect($this->socket, $this->server, $this->port);
+        return @socket_connect($this->socket, $this->server, $this->port);
     }
 
     public function disconnect()
@@ -99,6 +101,7 @@ class ircSocket
             socket_set_block($this->socket);
             socket_set_option($this->socket, SOL_SOCKET, SO_LINGER, $arrOpt);
             socket_close($this->socket);
+            $this->socket=null;
         }
     }
 
@@ -110,7 +113,7 @@ class ircSocket
 
     public function read()
     {
-        $string = socket_read($this->socket, 1024, PHP_NORMAL_READ);
+        $string = @socket_read($this->socket, 1024, PHP_NORMAL_READ);
         if (false !== $string)
         {
             $string = trim($string, " \t\n\r\0\x0B");
@@ -120,6 +123,6 @@ class ircSocket
 
     public function write($string)
     {
-        return socket_write($this->socket, $string."\n");
+        return @socket_write($this->socket, $string."\n");
     }
 }

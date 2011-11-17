@@ -57,6 +57,8 @@ class ircConnection
 {
     const CONN_TIMEOUT  = 180;
     const MAX_STACK_LEN = 200;
+    const SECS_DAY      = 86400;
+    const SECS_HOUR     = 3600;
 
     const JOIN        = 'join';
     const NICK        = 'nick';
@@ -82,7 +84,7 @@ class ircConnection
     private $reconnect          = true;
     private $reconnectwait      = 30;
     private $connectRetriesMade = 0;
-    private $connectRetries     = 5;
+    private $connectRetries     = 2;
     private $join;
     private $nicks;
     private $nick;
@@ -132,7 +134,7 @@ class ircConnection
             ? $configuration[self::SERVER_PASS]
             : null;
         $this->user          = $configuration[self::USER];
-        $this->uptime['connection'] = time();
+        $this->uptime['bot uptime'] = time();
     }
 
     /**
@@ -180,6 +182,7 @@ class ircConnection
                 $this->connected = false;
             }
         }
+        $this->uptime['connection uptime'] = time();
         return $this->connected;
     }
 
@@ -295,7 +298,7 @@ class ircConnection
 
     private function getCommands($to)
     {
-        $commands = array('join', 'leave', 'voice', 'devoice', 'part', 'stats', 'uptime', 'kick', 'part', 'version', 'ping', '!quit');
+        $commands = array('join', 'leave', 'voice', 'devoice', 'part', 'stats', 'uptime', 'kick', 'part', 'version', 'ping');
         $commands = array_merge($commands, $this->getDiskCommands());
         foreach ($this->plugins as $plugin)
         {
@@ -408,13 +411,24 @@ class ircConnection
         }
     }
 
+    private function formatUptime($starttime)
+    {
+        $delta  = time()-$starttime;
+        $days   = floor($delta/self::SECS_DAY);
+        $remain = $delta - $days * self::SECS_DAY;
+        $hours  = floor($remain/self::SECS_HOUR);
+        $remain = $remain - $hours * self::SECS_HOUR;
+        $mins   = floor($remain/60);
+        $secs   = $remain - $mins * 60;
+        return " $days days, $hours hours, $mins mins, $secs secs";
+    }
 
     private function uptime($to)
     {
-        $this->writeline("PRIVMSG $to :I have been in the following channels for:");
+        $this->writeline("PRIVMSG $to :I have the following uptime record:");
         foreach ($this->uptime as $channel=>$uptime)
         {
-            $this->writeline("PRIVMSG $to :$channel : ".(time()-$uptime)."sec\n");
+            $this->writeline("PRIVMSG $to :$channel : ".$this->formatUptime($uptime)."\n");
         }
     }
 

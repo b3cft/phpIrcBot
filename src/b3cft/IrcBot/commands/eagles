@@ -1,0 +1,11 @@
+#!/bin/bash
+
+file=/var/tmp/.eagles
+
+shift; shift; shift; shift
+
+if [ "$1" == '' ]; then
+  echo "Current Eagles are: `cat $file`"
+else
+  echo $*>$file
+fi
