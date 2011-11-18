@@ -109,13 +109,21 @@ class welcomer extends b3cft\IrcBot\ircPlugin
             switch (strtolower($command))
             {
                 case 'welcome':
-                    if (0 === count($params))
+                    if (0 === count($params) && true === $message->isInChannel)
                     {
                         $this->addWelcome($message->channel, '');
                     }
-                    else if (1 <= count($params))
+                    else if (1 <= count($params) && true === $message->isInChannel)
                     {
                         $this->welcome($message->channel, implode(', ', $params));
+                    }
+                    else if (1 === count($params))
+                    {
+                        $this->welcome($params[0], $message->from);
+                    }
+                    else if (1 < count($params))
+                    {
+                        $this->welcome($params[0], implode(', ', array_slice($params, 1)));
                     }
                 break;
 
@@ -153,6 +161,10 @@ class welcomer extends b3cft\IrcBot\ircPlugin
 
     private function welcome($channel, $user)
     {
+        if ('#' !== substr($channel, 0, 1))
+        {
+            $channel = '#'.$channel;
+        }
         $welcome = false === empty($this->welcomes[$channel]) ?
                    $this->welcomes[$channel] :
                    "n00b alert! Welcome to $channel";
