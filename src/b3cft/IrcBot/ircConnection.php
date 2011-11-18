@@ -263,6 +263,11 @@ class ircConnection
             {
                 $channel = '#'.$channel;
             }
+            $key = array_search($channel, $this->join);
+            if (false !== $key)
+            {
+                unset($this->join[$key]);
+            }
             $this->writeline("PART $channel");
         }
     }
@@ -289,6 +294,10 @@ class ircConnection
             if ('#' !== substr($channel, 0, 1))
             {
                 $channel = '#'.$channel;
+            }
+            if (false === in_array($channel, $this->join))
+            {
+                $this->join[] = $channel;
             }
             $this->uptime[$channel] = time();
             $this->writeline("JOIN $channel");
