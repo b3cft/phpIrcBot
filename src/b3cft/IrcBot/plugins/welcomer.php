@@ -165,10 +165,12 @@ class welcomer extends b3cft\IrcBot\ircPlugin
         {
             $channel = '#'.$channel;
         }
-        $welcome = false === empty($this->welcomes[$channel]) ?
-                   $this->welcomes[$channel] :
-                   "n00b alert! Welcome to $channel";
-        $this->client->writeline("PRIVMSG $channel : $user: $welcome");
+        if (false === empty($this->welcomes[$channel]))
+        {
+            $this->client->writeline("PRIVMSG $channel : $user: {$this->welcomes[$channel]}");
+        }
+
+
     }
 
     private function addWelcome($channel, $welcome)
@@ -181,6 +183,10 @@ class welcomer extends b3cft\IrcBot\ircPlugin
         {
             $this->welcomes[$channel] = $welcome;
             $this->persistData();
+        }
+        else if ('none' === strtolower($welcome))
+        {
+            unset($this->welcomes[$channel]);
         }
         else
         {
