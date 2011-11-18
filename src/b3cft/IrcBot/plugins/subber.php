@@ -89,8 +89,8 @@ class subber extends b3cft\IrcBot\ircPlugin
                 {
                     $this->client->writeline("PRIVMSG $message->channel :$message->from -> $msg->from: $newMessage");
               }
+              break;
             }
-            break;
         }
         if (true === isset($matches[3]) && '' === $matches[3])
         {
