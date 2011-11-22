@@ -44,12 +44,17 @@ use b3cft\IrcBot\IrcBot,
     b3cft\CoreUtils\Registry;
 
 /* Include PSR0 Autoloader and add dev path to search */
-require_once 'gwc.autoloader.php';
-$devPath = realpath(dirname(__FILE__).'/../');
-if (false === empty($devPath))
+if (false === defined('psr0autoloader'))
 {
-    __gwc_autoload_alsoSearch($devPath);
+    require_once 'gwc.autoloader.php';
+    $devPath = realpath(dirname(__FILE__).'/../');
+    if (false === empty($devPath))
+    {
+        __gwc_autoload_alsoSearch($devPath);
+    }
+    define('psr0autoloader', true);
 }
+
 
 /**
  *

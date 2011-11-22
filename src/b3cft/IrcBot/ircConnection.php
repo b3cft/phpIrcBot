@@ -40,6 +40,7 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
+use b3cft\IrcBot\ircMessage;
 namespace b3cft\IrcBot;
 use b3cft\CoreUtils\Registry;
 
@@ -125,7 +126,7 @@ class ircConnection
         $this->socket        = $socket;
         $this->join          = (false === empty($configuration[self::JOIN]))
             ? explode(',', $configuration[self::JOIN])
-            : null;
+            : array();
         $this->nicks         = explode(',', $configuration[self::NICK]);
         $this->pass          = (false === empty($configuration[self::PASS]))
             ? $configuration[self::PASS]
@@ -255,6 +256,13 @@ class ircConnection
         return true;
     }
 
+    /**
+     * Leave on or more IRC channels
+     *
+     * @param string[] $channels - channels to leave
+     *
+     * @return void
+     */
     private function leave($channels)
     {
         foreach ($channels as $channel)
@@ -272,12 +280,25 @@ class ircConnection
         }
     }
 
-
+    /**
+     * Add a new plugin to the listeners list
+     *
+     * @param ircPlugin $plugin - plugin object to be added
+     *
+     * @return void
+     */
     public function registerPlugin(ircPlugin $plugin)
     {
         $this->plugins[] = $plugin;
     }
 
+    /**
+     * Join one or more channels
+     *
+     * @param string[] $channel - channels to join
+     *
+     * @return void
+     */
     private function join($channel = null)
     {
         if (true === is_null($channel))
@@ -305,6 +326,13 @@ class ircConnection
 
     }
 
+    /**
+     * Send a list of commands available to an IRC user
+     *
+     * @param string $to - irc user to send list of commands to
+     *
+     * @return void
+     */
     private function getCommands($to)
     {
         $commands = array('join', 'leave', 'voice', 'devoice', 'part', 'stats', 'uptime', 'kick', 'part', 'version', 'ping');
@@ -322,6 +350,11 @@ class ircConnection
         }
     }
 
+    /**
+     * Scan the command path folder for commands executable by users
+     *
+     * @return string[]
+     */
     private function getDiskCommands()
     {
         $path = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']);
@@ -342,7 +375,15 @@ class ircConnection
     	return $commands;
     }
 
-    private function executeDiskCommand($message)
+    /**
+     * Execute a command from the command path folder and echo the response back to the user or
+     * channel.
+     *
+     * @param ircMessage $message
+     *
+     * @return void
+     */
+    private function executeDiskCommand(ircMessage $message)
     {
         $bits    = explode(' ', $message->message);
         $command = substr(array_shift($bits),1);
@@ -378,7 +419,7 @@ class ircConnection
 	    {
 	        $to = $message->channel;
 	    }
-	    exec("$exec '$this->nick' '$channel' '$message->from' $message->message", $output, $return);
+	    exec("$exec '$this->nick' '$channel' '$message->from' $message->message 2>/dev/null", $output, $return);
         if (0 !== $return)
         {
             $this->writeline("PRIVMSG $to :command failed");
@@ -392,34 +433,86 @@ class ircConnection
 		}
     }
 
+    /**
+     * Grant operator status to a user
+     *
+     * @param string   $channel - channel to change user mode on
+     * @param string[] $users   - users to change mode
+     *
+     * @return void
+     */
     private function op($channel, $users)
     {
         $this->mode($channel, '+o', $users);
     }
 
+    /**
+     * Remove operator status from users
+     *
+     * @param string   $channel - channel to change user mode on
+     * @param string[] $users   - users to change mode
+     *
+     * @return void
+     */
     private function deop($channel, $users)
     {
         $this->mode($channel, '-o', $users);
     }
 
+    /**
+     * Grant voice status from users
+     *
+     * @param string   $channel - channel to change user mode on
+     * @param string[] $users   - users to change mode
+     *
+     * @return void
+     */
     private function voice($channel, $users)
     {
         $this->mode($channel, '+v', $users);
     }
 
+    /**
+     * Remove voice status from users
+     *
+     * @param string   $channel - channel to change user mode on
+     * @param string[] $users   - users to change mode
+     *
+     * @return void
+     */
     private function devoice($channel, $users)
     {
         $this->mode($channel, '-v', $users);
     }
 
+    /**
+     * Add or remove status from users
+     *
+     * @param string   $channel - channel to change user mode on
+     * @param string   $mode    - mode to change
+     * @param string[] $users   - users to change mode
+     *
+     * @return void
+     */
     private function mode($channel, $mode, $users)
     {
+        if ('#' !== substr($channel, 0, 1))
+        {
+            $channel = '#'.$channel;
+        }
         foreach ($users as $user)
         {
             $this->writeline("MODE $channel $mode $user");
         }
     }
 
+    /**
+     * Format uptime as days hrs mins and secs
+     *
+     * @param int $starttime
+     *
+     * @return string
+     */
     private function formatUptime($starttime)
     {
         $delta  = time()-$starttime;
@@ -432,6 +525,13 @@ class ircConnection
         return " $days days, $hours hours, $mins mins, $secs secs";
     }
 
+    /**
+     * Display uptime stats to a user
+     *
+     * @param unknown_type $to - user to display stats to
+     *
+     * @return void
+     */
     private function uptime($to)
     {
         $this->writeline("PRIVMSG $to :I have the following uptime record:");
@@ -441,6 +541,13 @@ class ircConnection
         }
     }
 
+    /**
+     * Display statistics to a user who requests them
+     *
+     * @param string $to - user to display stats to
+     *
+     * @return void
+     */
     private function stats($to)
     {
         $this->uptime($to);
@@ -450,11 +557,6 @@ class ircConnection
             $this->writeline("PRIVMSG $to :$channel : $count messages");
         }
         $this->writeline("PRIVMSG $to :I have ".count($this->plugins).' plugins registered');
-    }
-
-    private function send()
-    {
-
     }
 
     /**
@@ -467,6 +569,13 @@ class ircConnection
         $this->writeline('PONG :'.substr($received, 6));
     }
 
+    /**
+     * Retrieve the current messages heard in a channel
+     *
+     * @param string $channel
+     *
+     * @return ircMessage[]
+     */
     public function getMessageStack($channel)
     {
         if (false === empty($this->channels[$channel]))
@@ -476,6 +585,13 @@ class ircConnection
         return array();
     }
 
+    /**
+     * Process a message and handle it and/or pass it on to plugin to be handled
+     *
+     * @param ircMessage $message
+     *
+     * @return void
+     */
     private function processMsg(ircMessage $message)
     {
         if ('PRIVMSG' === $message->action)
@@ -520,7 +636,7 @@ class ircConnection
                 case 'join':
                     if (0 === count($params))
                     {
-                        $message = 'You need to tell me what channel to join!';
+                        $response = 'You need to tell me what channel to join!';
                     }
                     else
                     {
@@ -549,7 +665,7 @@ class ircConnection
                 break;
 
                 case "version":
-                    $response = "b3cft's phpbot Version @@PACKAGE_VERSION@@\x01";
+                    $response = "b3cft's phpbot Version @@PACKAGE_VERSION@@";
                 break;
 
                 //case 'op':
@@ -564,6 +680,10 @@ class ircConnection
                     {
                         $this->$command($message->channel, $params);
                     }
+                    else if (1 === count($params))
+                    {
+                        $this->$command($params[0], array($message->from));
+                    }
                     else if(2 <= count($params))
                     {
                         $this->$command($params[0], array_slice($params, 1));
@@ -574,11 +694,9 @@ class ircConnection
                     $this->getCommands($message->from);
                 break;
 
-                case 'kick':
-                break;
-
                 case 'help':
-                    $this->writeline("PRIVMSG {$message->channel} :".$this->config['helpurl']);
+                    $replyTo  = $message->channel;
+                    $response = $this->config['helpurl'];
                 break;
 
                 case 'uptime':
@@ -600,6 +718,14 @@ class ircConnection
         }
     }
 
+    /**
+     * Retrieve the raw irc message and decide wether to process it or not.
+     * Also handle ping/pong messages here.
+     *
+     * @param string $received
+     *
+     * @return boolean
+     */
     private function talkIRC($received)
     {
         $return = true;
@@ -614,6 +740,11 @@ class ircConnection
         return (false === $return) ? false : true;
     }
 
+    /**
+     * Run the connection, looping until the connection dies are we are asked to quit.
+     *
+     * @return void
+     */
     public function run()
     {
         while (true === $this->connect())
@@ -635,6 +766,13 @@ class ircConnection
         $this->disconnect();
     }
 
+    /**
+     * Send a string back to the irc server via the socket
+     *
+     * @param string $string
+     *
+     * @return boolean
+     */
     public function writeline($string)
     {
         $status = $this->socket->write($string);
@@ -642,6 +780,11 @@ class ircConnection
         return $status;
     }
 
+    /**
+     * Read a line from the socket
+     *
+     * @return string|boolean
+     */
     private function readline()
     {
         $string = $this->socket->read();
@@ -652,6 +795,13 @@ class ircConnection
         return $string;
     }
 
+    /**
+     * Pass a debug message to be printed back to the controller.
+     *
+     * @param mixed $message
+     *
+     * @return void
+     */
     private function debugPrint($message)
     {
         $this->client->debugPrint($message, !empty($this->config['debug']));

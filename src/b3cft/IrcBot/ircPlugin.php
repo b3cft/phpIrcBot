@@ -40,6 +40,7 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
+use b3cft\IrcBot\ircPlugin;
 namespace b3cft\IrcBot;
 use b3cft\IrcBot\ircConnection,
     b3cft\IrcBot\ircMessage;
@@ -47,7 +48,13 @@ use b3cft\IrcBot\ircConnection,
 abstract class ircPlugin
 {
 
+    /**
+     * Configuration properties for the plugin
+     *
+     * @var string[]
+     */
     protected $config;
+
     /**
      * Connection to irc server
      *
@@ -55,8 +62,21 @@ abstract class ircPlugin
      */
     protected $client;
 
+    /**
+     * List of authorised users
+     *
+     * @var string[]
+     */
     protected $authUsers = array();
 
+    /**
+     * Constructor
+     *
+     * @param ircConnection $client - ircConnection to be used for communication
+     * @param array         $config - configuration array for this plugin
+     *
+     * @return ircPlugin
+     */
     public function __construct(ircConnection $client, array $config)
     {
         $this->client = $client;
@@ -67,6 +87,13 @@ abstract class ircPlugin
         }
     }
 
+    /**
+     * Returns true if the user is in the list of authorised users.
+     *
+     * @param string $user - user being queried
+     *
+     * @return boolean
+     */
     protected function isAuthorised($user)
     {
         if (false === isset($this->authUsers[$user]))
@@ -80,6 +107,13 @@ abstract class ircPlugin
         }
     }
 
+    /**
+     * Magic method to retrieve values of private or protected properties
+     *
+     * @param string $name - property being requested
+     *
+     * @return mixed
+     */
     public function __get($name)
     {
         if (true === isset($this->$name))
@@ -88,7 +122,19 @@ abstract class ircPlugin
         }
     }
 
+    /**
+     * Called to process each message when it is recieved
+     *
+     * @param ircMessage $message - irc message to be processed
+     *
+     * @return void
+     */
     public abstract function process(ircMessage $message);
 
+    /**
+     * Returns a list of commands supported by the plugin, if any
+     *
+     * @return string[]
+     */
     public abstract function getCommands();
 }

@@ -94,9 +94,11 @@ class ircMessage
             switch ($this->action)
             {
                 case 'MODE':
-                    $this->channel = $bits[2];
-                    $this->to      = isset($bits[4]) ? $bits[4] : '';
-                //yeah, no break
+                    $this->channel     = $bits[2];
+                    $this->to          = isset($bits[4]) ? $bits[4] : '';
+                    $this->isInChannel = true;
+                break;
+
                 case 'JOIN':
                 case 'PART':
                     $this->isInChannel = true;
@@ -129,6 +131,13 @@ class ircMessage
         }
     }
 
+    /**
+     * Magic method to retrieve values of private or protected properties
+     *
+     * @param string $name - property being requested
+     *
+     * @return mixed
+     */
     public function __get($name)
     {
         if (true === isset($this->$name))

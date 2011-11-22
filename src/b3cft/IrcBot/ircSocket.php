@@ -77,6 +77,11 @@ class ircSocket
         $this->port   = $port;
     }
 
+    /**
+     * Create the socket connection to the server.
+     *
+     * @return void
+     */
     private function create()
     {
         if (false === is_resource($this->socket))
@@ -85,6 +90,11 @@ class ircSocket
         }
     }
 
+    /**
+     * Connect to the socket
+     *
+     * @return boolean
+     */
     public function connect()
     {
         $this->disconnect();
@@ -93,6 +103,11 @@ class ircSocket
         return @socket_connect($this->socket, $this->server, $this->port);
     }
 
+    /**
+     * Disconnect from the socket
+     *
+     * @return void
+     */
     public function disconnect()
     {
         if (true === is_resource($this->socket))
@@ -105,12 +120,22 @@ class ircSocket
         }
     }
 
+    /**
+     * Make sure resource is release on socket deletion
+     *
+     * @return void
+     */
     public function __destruct()
     {
         $this->disconnect();
         $this->socket = null;
     }
 
+    /**
+     * Read a line from the socket
+     *
+     * @return string|false
+     */
     public function read()
     {
         $string = @socket_read($this->socket, 1024, PHP_NORMAL_READ);
@@ -121,6 +146,13 @@ class ircSocket
         return $string;
     }
 
+    /**
+     * Write a line to the socket
+     *
+     * @param string $string - string to be written
+     *
+     * @return boolean
+     */
     public function write($string)
     {
         return @socket_write($this->socket, $string."\n");
