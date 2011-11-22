@@ -36,18 +36,10 @@
  </target>
 
  <target name="requires">
-    <exec executable="sudo">
-        <arg line="pear channel-discover 
-          pear.gradwell.com"/>
-    </exec>
-    <exec executable="sudo">
-        <arg line="pear channel-discover 
-          pear.b3cft.com"/>
-    </exec>
-    <exec executable="sudo">
-        <arg line="pear install 
-          gradwell/autoloader
-          b3cft/CoreUtils"/>
+    <exec executable="pear">
+        <arg line="install 
+          channel://pear.gradwell.com/autoloader
+          channel://pear.b3cft.com/CoreUtils"/>
     </exec>
  </target>
 
