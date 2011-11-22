@@ -1,3 +1,36 @@
-#!/bin/bash
+#!/usr/bin/env php
+<?php
+$input   = $_SERVER['argv'];
+array_shift($input);
+$nick    = array_shift($input); 
+$channel = array_shift($input);
+$sender  = array_shift($input);
+$first   = array_shift($input);
+$tz      = array_shift($input);
 
-date +%p|sed s/am/Morning./|sed s/pm/Afternoon/
+if (false === empty($tz) && true === in_array($tz, timezone_identifiers_list()))
+{
+date_default_timezone_set($tz);
+$suffix=" (it is currently ".date('H:i')." in $tz)";
+}
+else
+{
+date_default_timezone_set('Europe/London');
+$suffix='';
+}
+
+$hour = date('H');
+
+if (12 > $hour)
+{
+    $msg = 'Good morning';
+}
+else if (18 > $hour)
+{
+    $msg = 'Good afternoon';
+}
+else
+{
+    $msg = 'Good evening';
+}
+echo "$msg $sender$suffix.";
