@@ -40,7 +40,6 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
-use b3cft\IrcBot\ircMessage;
 namespace b3cft\IrcBot;
 use b3cft\CoreUtils\Registry;
 
@@ -81,18 +80,18 @@ class ircConnection
      */
     private $channels;
 
-    private $connected          = false;
-    private $reconnect          = true;
-    private $reconnectwait      = 30;
-    private $connectRetriesMade = 0;
-    private $connectRetries     = 2;
+    private $connected           = false;
+    private $reconnect           = 1;
+    private $reconnectwait       = 2;
+    private $connectAttemptsMade = 0;
+    private $connectAttempts     = 2;
     private $join;
     private $nicks;
     private $nick;
     private $pass;
     private $serverPass;
     /**
-     * Socket Connecion
+     * Socket Connection
      *
      * @var ircSocket
      */
@@ -121,20 +120,30 @@ class ircConnection
      */
     public function __construct($configuration, ircSocket $socket, $client=null)
     {
-        $this->config        = $configuration;
-        $this->client        = $client;
-        $this->socket        = $socket;
-        $this->join          = (false === empty($configuration[self::JOIN]))
-            ? explode(',', $configuration[self::JOIN])
-            : array();
-        $this->nicks         = explode(',', $configuration[self::NICK]);
-        $this->pass          = (false === empty($configuration[self::PASS]))
-            ? $configuration[self::PASS]
-            : null;
-        $this->serverPass    = (false === empty($configuration[self::SERVER_PASS]))
-            ? $configuration[self::SERVER_PASS]
-            : null;
-        $this->user          = $configuration[self::USER];
+        $classVars = get_class_vars(get_class($this));
+        foreach ($configuration as $item=>$value)
+        {
+            if (true === in_array($item, $classVars))
+            {
+                $this->$item = $value;
+            }
+        }
+        $this->config               = $configuration;
+        $this->client               = $client;
+        $this->socket               = $socket;
+        $this->user                 = $configuration[self::USER];
+        $this->connected            = false;
+        $this->connectAttemptsMade  = 0;
+        $this->join                 = (false === empty($configuration[self::JOIN]))
+                                      ? explode(',', $configuration[self::JOIN])
+                                      : array();
+        $this->nicks                = explode(',', $configuration[self::NICK]);
+        $this->pass                 = (false === empty($configuration[self::PASS]))
+                                      ? $configuration[self::PASS]
+                                      : null;
+        $this->serverPass           = (false === empty($configuration[self::SERVER_PASS]))
+                                      ? $configuration[self::SERVER_PASS]
+                                      : null;
         $this->uptime['bot uptime'] = time();
     }
 
@@ -159,24 +168,28 @@ class ircConnection
     /**
      * Connect to the irc server and login
      *
-     * @return void
+     * @return boolean
      */
     private function connect()
     {
-        while(false === $this->connected)
+        while(false === $this->connected && $this->connectAttemptsMade <= $this->connectAttempts)
         {
-            $this->debugPrint('Connecting...');
-            $this->connected = $this->socket->connect();
-            if (false === $this->connected && true === $this->reconnect && $this->connectRetriesMade < $this->connectRetries)
+            if (0 === $this->connectAttemptsMade)
+            {
+                $this->debugPrint('Connecting...');
+                $this->connectAttemptsMade++;
+                $this->connected = $this->socket->connect();
+            }
+            else if (false === $this->connected && 1 == $this->reconnect)
             {
                 $this->debugPrint("Sleeping for $this->reconnectwait seconds...");
                 sleep($this->reconnectwait);
-                $this->connectRetriesMade++;
+                $this->connectAttemptsMade++;
                 $this->connected = $this->socket->connect();
             }
-            else if ($this->connectRetriesMade >= $this->connectRetries)
+            else if (0 == $this->reconnect || $this->connectAttemptsMade >= $this->connectAttempts)
             {
-                die('I give up. Out of connection attempts');
+                return false;
             }
             if (true === $this->connected && false === $this->login())
             {
@@ -419,6 +432,7 @@ class ircConnection
 	    {
 	        $to = $message->channel;
 	    }
+
 	    exec("$exec '$this->nick' '$channel' '$message->from' $message->message 2>/dev/null", $output, $return);
         if (0 !== $return)
         {

@@ -69,22 +69,88 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     private $client;
     private $socket;
     private $config = array(
-        	'helpurl'     => 'someurl',
-            'nick'        => 'unittest',
-            'user'	      => 'unittest',
-            'commandpath' => '../../tests/fixtures',
+        	'helpurl'         => 'someurl',
+            'nick'            => 'unittest',
+            'user'	          => 'unittest',
+            'commandpath'     => '../../tests/fixtures',
+            'connectAttempts' => 1,
+            'reconnectwait'   => 0,
+            'reconnect'	      => 1,
         );
 
     public function setUp()
     {
-        $this->socket = $this->getMock('b3cft\IrcBot\ircSocket', array('write'), array(), '', false);
+        $this->socket = $this->getMock('b3cft\IrcBot\ircSocket', array('write', 'connect'), array(), '', false);
         $this->client = $this->getMock('b3cft\IrcBot\ircBot', array('debugPrint'), array(), '', false);
+        $this->config = array(
+        	'helpurl'         => 'someurl',
+            'nick'            => 'unittest',
+            'user'	          => 'unittest',
+            'commandpath'     => '../../tests/fixtures',
+            'connectAttempts' => 2,
+            'reconnectwait'   => 0,
+            'reconnect'	      => 1,
+        );
     }
 
     public function tearDown()
     {
         $this->socket = null;
         $this->client = null;
+    }
+
+    public function testGetNotDefined()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->assertNull($conn->wibblewobblewoo);
+    }
+
+    public function testConnectBasic()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $this->socket->expects($this->once())
+                     ->method('connect')
+                     ->will($this->returnValue(true));
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+    }
+
+    public function testConnectRetry()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->at(0))
+                     ->method('connect')
+                     ->will($this->returnValue(false));
+
+        $this->socket->expects($this->at(1))
+                     ->method('connect')
+                     ->will($this->returnValue(true));
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+    }
+
+    public function testConnectNoRetry()
+    {
+        //$this->markTestIncomplete('debugging');
+        $this->config['reconnect'] = 0;
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->assertEquals(0, $conn->reconnect);
+
+        $this->socket->expects($this->once())
+                     ->method('connect')
+                     ->will($this->returnValue(false));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
     }
 
     /**
