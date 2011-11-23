@@ -114,6 +114,7 @@ class ircConnection
      * Constructor. Initialised socket connection and assigned connection parameters.
      *
      * @param mixed[]   $configuration - connection parameters for irc server.
+     * @param ircSocket $socket        - tcp socket connection class.
      * @param ircClient $client        - client that called the connection.
      *
      * @return ircConnection
@@ -157,6 +158,13 @@ class ircConnection
         $this->disconnect();
     }
 
+    /**
+     * Magic getter for private/protected properties
+     *
+     * @param string $name - property being accessed
+     *
+     * @return mixed
+     */
     public function __get($name)
     {
         if (true === isset($this->$name))
@@ -348,7 +356,19 @@ class ircConnection
      */
     private function getCommands($to)
     {
-        $commands = array('join', 'leave', 'voice', 'devoice', 'part', 'stats', 'uptime', 'kick', 'part', 'version', 'ping');
+        $commands = array(
+            'join',
+            'leave',
+            'voice',
+            'devoice',
+            'part',
+            'stats',
+            'uptime',
+            'kick',
+            'part',
+            'version',
+            'ping'
+        );
         $commands = array_merge($commands, $this->getDiskCommands());
         foreach ($this->plugins as $plugin)
         {
@@ -373,19 +393,25 @@ class ircConnection
         $path = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']);
         if (false === $path)
         {
-            print('Command path not found '.dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']."\n");
+            print(
+                'Command path not found '.
+                dirname(__FILE__).
+                DIRECTORY_SEPARATOR.
+                $this->config['commandpath']."\n"
+            );
             return array();
         }
         $commands = array();
         $handle = opendir($path);
-    	while (false !== ($command = readdir($handle)))
-    	{
-    		if (true === is_file($path.DIRECTORY_SEPARATOR.$command) && is_executable($path.DIRECTORY_SEPARATOR.$command))
-    		{
-    	        $commands[] = '?'.pathinfo($path.DIRECTORY_SEPARATOR.$command, PATHINFO_FILENAME);
-    		}
-    	}
-    	return $commands;
+        while (false !== ($command = readdir($handle)))
+        {
+            if (true === is_file($path.DIRECTORY_SEPARATOR.$command) &&
+                is_executable($path.DIRECTORY_SEPARATOR.$command))
+            {
+                $commands[] = '?'.pathinfo($path.DIRECTORY_SEPARATOR.$command, PATHINFO_FILENAME);
+            }
+        }
+        return $commands;
     }
 
     /**
@@ -412,28 +438,28 @@ class ircConnection
             return;
         }
 
-	    /**
-	     * $input = $_SERVER['argv'][1];
+        /**
+         * $input = $_SERVER['argv'][1];
          * $toks = explode(" ",$input);
          * $nick = array_shift($toks);
          * $channel = array_shift($toks);
          * $sender = array_shift($toks);
          * $first = array_shift($toks);
-	     */
+         */
         $channel = $message->channel;
         $from    = $message->from;
         $to      = $message->from;
 
-	    if ($channel == $from)
-	    {
-	        $channel = 'null';
-	    }
-	    else
-	    {
-	        $to = $message->channel;
-	    }
+        if ($channel == $from)
+        {
+            $channel = 'null';
+        }
+        else
+        {
+            $to = $message->channel;
+        }
 
-	    exec("$exec '$this->nick' '$channel' '$message->from' $message->message 2>/dev/null", $output, $return);
+        exec("$exec '$this->nick' '$channel' '$message->from' $message->message 2>/dev/null", $output, $return);
         if (0 !== $return)
         {
             $this->writeline("PRIVMSG $to :command failed");
@@ -444,7 +470,7 @@ class ircConnection
             {
                 $this->writeline("PRIVMSG $to :$line");
             }
-		}
+        }
     }
 
     /**

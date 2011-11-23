@@ -125,42 +125,55 @@ class IrcBot
         $index = 0;
         while (null !== ($connectionConf = $this->config->get('connection'.$index++))) {
             $connectionConf         = array_merge($this->config->get('global'), $connectionConf);
-            $socket                 = new ircSocket($connectionConf[ircSocket::SERVER], $connectionConf[ircSocket::PORT]);
+            $socket                 = new ircSocket(
+                $connectionConf[ircSocket::SERVER],
+                $connectionConf[ircSocket::PORT]
+            );
             $this->connectionList[] = new ircConnection($connectionConf, $socket, $this);
         }
         $this->registerPlugins();
         $this->runConnections();
     }
 
+    /**
+     * Look in the config 'pluginpath' and register any plugins found that are enabled
+     *
+     * @return void
+     */
     private function registerPlugins()
     {
-        $path = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config->get('global', 'pluginpath'));
+        $path = realpath(
+            dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config->get('global', 'pluginpath')
+        );
         if (false === $path)
         {
-            print('Plugins path not found '.dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config->get('global', 'pluginpath')."\n");
+            print('Plugins path not found '.dirname(__FILE__).
+                DIRECTORY_SEPARATOR.
+                $this->config->get('global', 'pluginpath')."\n");
             return;
         }
-    	$handle = opendir($path);
-    	while (false !== ($plugin = readdir($handle)))
-    	{
-    		if (true === is_file($path.DIRECTORY_SEPARATOR.$plugin) && substr($plugin,-4) === '.php')
-    		{
-				include_once($path.DIRECTORY_SEPARATOR.$plugin);
-				$pluginName  = substr($plugin, 0, -4);
-		        $pluginClass = '\\'.$pluginName; //to get around namespaceing issues.
+        $handle = opendir($path);
+        while (false !== ($plugin = readdir($handle)))
+        {
+            if (true === is_file($path.DIRECTORY_SEPARATOR.$plugin) &&
+                substr($plugin, -4) === '.php')
+            {
+                include_once $path.DIRECTORY_SEPARATOR.$plugin;
+                $pluginName  = substr($plugin, 0, -4);
+                $pluginClass = '\\'.$pluginName; //to get around namespaceing issues.
                 foreach ($this->connectionList as $connection)
                 {
                     $pluginConfig = $this->config->get($pluginName);
-		    	    if ('1' === $pluginConfig['enabled'])
+                    if ('1' === $pluginConfig['enabled'])
                     {
                         $plugin = new $pluginClass($connection, $pluginConfig);
                         $connection->registerPlugin($plugin);
                     }
                     $plugin = null;
                 }
-    		}
-    	}
-    	closedir($handle);
+            }
+        }
+        closedir($handle);
 
     }
 
@@ -221,6 +234,14 @@ class IrcBot
         self::$instance = null;
     }
 
+    /**
+     * Output debug information to STDOUT
+     *
+     * @param mixed[] $message - any debug information to be output to STDOUT
+     * @param boolean $debug   - override debug value from a connection
+     *
+     * @return void
+     */
     public function debugPrint($message, $debug=false)
     {
         if (true === $debug || $this->config->get('global', 'debug'))
