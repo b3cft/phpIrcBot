@@ -2,7 +2,7 @@
 <?php
 $input   = $_SERVER['argv'];
 array_shift($input);
-$nick    = array_shift($input);
+$nick    = array_shift($input); 
 $channel = array_shift($input);
 $sender  = array_shift($input);
 $first   = array_shift($input);
@@ -11,7 +11,7 @@ $tz      = array_shift($input);
 if (false === empty($tz) && true === in_array($tz, timezone_identifiers_list()))
 {
 date_default_timezone_set($tz);
-$suffix=" from $tz";
+$suffix=" (it is currently ".date('H:i')." in $tz)";
 }
 else
 {
