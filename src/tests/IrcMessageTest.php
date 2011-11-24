@@ -43,15 +43,15 @@
 use b3cft\IrcBot\IrcMessage;
 
 /* Include PSR0 Autoloader and add dev path to search */
-if (false === defined('psr0autoloader'))
+if (false === defined('PSR0AUTOLOADER'))
 {
-    require_once 'gwc.autoloader.php';
+    include_once 'gwc.autoloader.php';
     $devPath = realpath(dirname(__FILE__).'/../');
     if (false === empty($devPath))
     {
         __gwc_autoload_alsoSearch($devPath);
     }
-    define('psr0autoloader', true);
+    define('PSR0AUTOLOADER', true);
 }
 
 /**
@@ -70,7 +70,10 @@ class ircMessageTest extends PHPUnit_Framework_TestCase
      */
     public function testBasicMessage()
     {
-        $message = new ircMessage(':b3cft!b3cft@30D15FCA.3F0ED70D.833D86B.IP PRIVMSG #frameworks :welcome to the world of tomorrow', 'unittest');
+        $message = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG #frameworks :welcome to the world of tomorrow',
+            'unittest'
+        );
 
         $this->assertAttributeEquals(true, 'isInChannel', $message);
         $this->assertAttributeEquals(false, 'isToMe', $message);
@@ -88,7 +91,10 @@ class ircMessageTest extends PHPUnit_Framework_TestCase
      */
     public function testChannelMessageToMe1()
     {
-        $message = new ircMessage(':b3cft!b3cft@30D15FCA.3F0ED70D.833D86B.IP PRIVMSG #frameworks :unittest welcome to the world of tomorrow', 'unittest');
+        $message = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest welcome to the world of tomorrow',
+            'unittest'
+        );
 
         $this->assertAttributeEquals(true, 'isInChannel', $message);
         $this->assertAttributeEquals(true, 'isToMe', $message);
@@ -106,7 +112,10 @@ class ircMessageTest extends PHPUnit_Framework_TestCase
      */
     public function testChannelMessageToMe2()
     {
-        $message = new ircMessage(':b3cft!b3cft@30D15FCA.3F0ED70D.833D86B.IP PRIVMSG #frameworks :unittest: welcome to the world of tomorrow', 'unittest');
+        $message = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: welcome to the world of tomorrow',
+            'unittest'
+        );
 
         $this->assertAttributeEquals(true, 'isInChannel', $message);
         $this->assertAttributeEquals(true, 'isToMe', $message);
@@ -124,7 +133,10 @@ class ircMessageTest extends PHPUnit_Framework_TestCase
      */
     public function testDirectMessageToMe()
     {
-        $message = new ircMessage(':b3cft!b3cft@30D15FCA.3F0ED70D.833D86B.IP PRIVMSG unittest :welcome to the world of tomorrow', 'unittest');
+        $message = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG unittest :welcome to the world of tomorrow',
+            'unittest'
+        );
 
         $this->assertAttributeEquals(false, 'isInChannel', $message);
         $this->assertAttributeEquals(true, 'isToMe', $message);
@@ -135,9 +147,17 @@ class ircMessageTest extends PHPUnit_Framework_TestCase
         $this->assertAttributeEquals('PRIVMSG', 'action', $message);
     }
 
+    /**
+     * Test a mode message gets assigned the correct message type
+     *
+     * @return void
+     */
     public function testModeMessage()
     {
-        $message = new ircMessage(':overlord!andy.brock@30D15FCA.3F0ED70D.833D86B.IP MODE #frameworks +o b3cft', 'unittest');
+        $message = new ircMessage(
+            ':overlord!andy.brock@30D15FCA.3F0ED70D.833D86B.IP MODE #frameworks +o b3cft',
+            'unittest'
+        );
 
         $this->assertAttributeEquals(true, 'isInChannel', $message);
         $this->assertAttributeEquals(false, 'isToMe', $message);
@@ -148,9 +168,17 @@ class ircMessageTest extends PHPUnit_Framework_TestCase
         $this->assertAttributeEquals('MODE', 'action', $message);
     }
 
+    /**
+     * Test a join message gets assigned the correct message type
+     *
+     * @return void
+     */
     public function testJoinMessage()
     {
-        $message = new ircMessage(':b3cft!b3cft@30D15FCA.3F0ED70D.833D86B.IP JOIN :#frameworks', 'unittest');
+        $message = new ircMessage(
+            ':b3cft!b3cft@30D15FCA.3F0ED70D.833D86B.IP JOIN :#frameworks',
+            'unittest'
+        );
 
         $this->assertAttributeEquals(true, 'isInChannel', $message);
         $this->assertAttributeEquals(false, 'isToMe', $message);
@@ -161,17 +189,33 @@ class ircMessageTest extends PHPUnit_Framework_TestCase
         $this->assertAttributeEquals('JOIN', 'action', $message);
     }
 
+    /**
+     * Check we can get private properties from the object
+     *
+     * @return void
+     */
     public function testGet()
     {
-        $message = new ircMessage(':b3cft!b3cft@30D15FCA.3F0ED70D.833D86B.IP PRIVMSG unittest :welcome to the world of tomorrow', 'unittest');
+        $message = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG unittest :welcome to the world of tomorrow',
+            'unittest'
+        );
         $this->assertAttributeEquals('welcome to the world of tomorrow', 'message', $message);
         $value = $message->message;
         $this->assertEquals('welcome to the world of tomorrow', $value);
     }
 
+    /**
+     * Check that getting a non-existant property returns null
+     *
+     * @return void
+     */
     public function testGetNonExistant()
     {
-        $message  = new ircMessage(':b3cft!b3cft@30D15FCA.3F0ED70D.833D86B.IP PRIVMSG unittest :welcome to the world of tomorrow', 'unittest');
+        $message  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG unittest :welcome to the world of tomorrow',
+            'unittest'
+        );
         $property = __METHOD__;
         $value    = $message->$property;
         $this->assertNull($value);
