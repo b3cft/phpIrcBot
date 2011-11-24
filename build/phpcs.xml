@@ -13,6 +13,8 @@
     <exclude name="PEAR.NamingConventions.ValidFunctionName.PrivateNoUnderscore"/>
     <exclude name="PEAR.ControlStructures.ControlSignature"/>
     <exclude name="PEAR.ControlStructures.MultiLineCondition.NewlineBeforeOpenBrace" />
+    <exclude name="PEAR.WhiteSpace.ScopeClosingBrace.BreakIdent" />
+    <exclude name="PEAR.WhiteSpace.ScopeIndent.Incorrect" />
  </rule>
 
  <!-- Include some sniffs from all around the place -->
