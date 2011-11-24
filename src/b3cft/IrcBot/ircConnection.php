@@ -66,12 +66,8 @@ class ircConnection
     const SERVER_PASS = 'serverpass';
     const USER        = 'user';
 
-    private $stack    = array();
     private $lastMsg  = 0;
 
-    private $listeners = array();
-
-    private $disconnect         = false;
 
     /**
      * Message collections by user and channels (a user is a channel)
@@ -418,33 +414,40 @@ class ircConnection
      * Execute a command from the command path folder and echo the response back to the user or
      * channel.
      *
-     * @param ircMessage $message
+     * @param ircMessage $message - message containing parameters for command
      *
      * @return void
      */
     private function executeDiskCommand(ircMessage $message)
     {
         $bits    = explode(' ', $message->message);
-        $command = substr(array_shift($bits),1);
+        $command = substr(array_shift($bits), 1);
         $path    = realpath(dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']);
         if (false === $path)
         {
-            print('Command path not found '.dirname(__FILE__).DIRECTORY_SEPARATOR.$this->config['commandpath']."\n");
+            print(
+                'Command path not found '.
+                dirname(__FILE__).
+                DIRECTORY_SEPARATOR.
+                $this->config['commandpath']."\n"
+            );
         }
         $exec = $path.DIRECTORY_SEPARATOR.$command;
-        if (pathinfo($exec, PATHINFO_DIRNAME) !== pathinfo($path.DIRECTORY_SEPARATOR.'.', PATHINFO_DIRNAME))
+        $execPath = pathinfo($exec, PATHINFO_DIRNAME);
+        $safePath = pathinfo($path.DIRECTORY_SEPARATOR.'.', PATHINFO_DIRNAME);
+        if ($execPath !== $safePath)
         {
             print("$message->from attempted to call $exec\n");
             return;
         }
 
         /**
-         * $input = $_SERVER['argv'][1];
-         * $toks = explode(" ",$input);
-         * $nick = array_shift($toks);
-         * $channel = array_shift($toks);
-         * $sender = array_shift($toks);
-         * $first = array_shift($toks);
+         * parameter order is
+         *
+         * nick
+         * channel
+         * sender
+         * command + args
          */
         $channel = $message->channel;
         $from    = $message->from;
@@ -459,7 +462,11 @@ class ircConnection
             $to = $message->channel;
         }
 
-        exec("$exec '$this->nick' '$channel' '$message->from' $message->message 2>/dev/null", $output, $return);
+        exec(
+            "$exec '$this->nick' '$channel' '$message->from' $message->message 2>/dev/null",
+            $output,
+            $return
+        );
         if (0 !== $return)
         {
             $this->writeline("PRIVMSG $to :command failed");
@@ -549,7 +556,7 @@ class ircConnection
     /**
      * Format uptime as days hrs mins and secs
      *
-     * @param int $starttime
+     * @param int $starttime - timestamp to use to calculate the offset
      *
      * @return string
      */
@@ -591,7 +598,9 @@ class ircConnection
     private function stats($to)
     {
         $this->uptime($to);
-        $this->writeline("PRIVMSG $to :I have seen in the following number of messages per channel/user:");
+        $this->writeline(
+            "PRIVMSG $to :I have seen in the following number of messages per channel/user:"
+        );
         foreach ($this->messageCount as $channel=>$count)
         {
             $this->writeline("PRIVMSG $to :$channel : $count messages");
@@ -601,6 +610,8 @@ class ircConnection
 
     /**
      * Respond to a ping from the irc server.
+     *
+     * @param string $received - string PING text received
      *
      * @return void
      */
@@ -612,7 +623,7 @@ class ircConnection
     /**
      * Retrieve the current messages heard in a channel
      *
-     * @param string $channel
+     * @param string $channel - channel to receive messages from
      *
      * @return ircMessage[]
      */
@@ -628,7 +639,7 @@ class ircConnection
     /**
      * Process a message and handle it and/or pass it on to plugin to be handled
      *
-     * @param ircMessage $message
+     * @param ircMessage $message - message to process
      *
      * @return void
      */
@@ -697,7 +708,7 @@ class ircConnection
                 break;
 
                 case "ping":
-                   $response = "PONG";
+                    $response = "PONG";
                 break;
 
                 case "time":
@@ -708,8 +719,6 @@ class ircConnection
                     $response = "b3cft's phpbot Version @@PACKAGE_VERSION@@";
                 break;
 
-                //case 'op':
-                //case 'deop':
                 case 'voice':
                 case 'devoice':
                     if (0 === count($params) && true === $message->isInChannel)
@@ -762,7 +771,7 @@ class ircConnection
      * Retrieve the raw irc message and decide wether to process it or not.
      * Also handle ping/pong messages here.
      *
-     * @param string $received
+     * @param string $received - raw message string
      *
      * @return boolean
      */
@@ -771,7 +780,7 @@ class ircConnection
         $return = true;
         if('PING :' === substr($received, 0, 6))
         {
-           $this->pong($received);
+            $this->pong($received);
         }
         else if (0 !== preg_match('/(PRIVMSG|JOIN|PART|MODE)/', $received))
         {
@@ -809,7 +818,7 @@ class ircConnection
     /**
      * Send a string back to the irc server via the socket
      *
-     * @param string $string
+     * @param string $string - string to be sent
      *
      * @return boolean
      */
@@ -838,7 +847,7 @@ class ircConnection
     /**
      * Pass a debug message to be printed back to the controller.
      *
-     * @param mixed $message
+     * @param mixed $message - message to be printed
      *
      * @return void
      */

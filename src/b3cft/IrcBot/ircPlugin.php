@@ -83,7 +83,7 @@ abstract class ircPlugin
         $this->config = $config;
         if (false === empty($this->config['users']))
         {
-            $this->authUsers = array_flip(explode(',',$config['users']));
+            $this->authUsers = array_flip(explode(',', $config['users']));
         }
     }
 
@@ -98,7 +98,9 @@ abstract class ircPlugin
     {
         if (false === isset($this->authUsers[$user]))
         {
-            $this->client->writeline("PRIVMSG $user : Sorry, you're not in my authorised users list.");
+            $this->client->writeline(
+                "PRIVMSG $user : Sorry, you're not in my authorised users list."
+            );
             return false;
         }
         else

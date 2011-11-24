@@ -67,17 +67,17 @@ class ircMessage
     private $nick;
 
     private static $watchedCommands = array(
-    	'PRIVMSG'=> true,
+        'PRIVMSG'=> true,
         'JOIN'   => true,
-        'PART'	 => true,
-		'MODE'	 => true,
+        'PART'     => true,
+        'MODE'     => true,
     );
 
     /**
      * Constructor. Initialised socket connection and assigned connection parameters.
      *
-     * @param mixed[]   $configuration - connection parameters for irc server.
-     * @param ircClient $client        - client that called the connection.
+     * @param srtring $raw  - raw message for processing.
+     * @param string  $nick - nick of current bot.
      *
      * @return ircConnection
      */
@@ -107,7 +107,10 @@ class ircMessage
 
                 case 'PRIVMSG':
                     $this->to      = $bits[2];
-                    $this->message = trim(substr(implode(' ', array_slice($bits, 3)), 1), " \t\n\r\0\x0B");
+                    $this->message = trim(
+                        substr(implode(' ', array_slice($bits, 3)), 1),
+                        " \t\n\r\0\x0B"
+                    );
                     if ('#' === substr($this->to, 0, 1))
                     {
                         $this->channel     = $this->to;

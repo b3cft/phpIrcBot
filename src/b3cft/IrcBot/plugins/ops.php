@@ -46,6 +46,13 @@ use b3cft\IrcBot\ircMessage,
 class ops extends b3cft\IrcBot\ircPlugin
 {
 
+    /**
+     * Process a message
+     *
+     * @param ircMessage $message - message to process
+     *
+     * @return void
+     */
     public function process(ircMessage $message)
     {
         if ('PRIVMSG' === $message->action && true === $message->isToMe)
@@ -118,13 +125,23 @@ class ops extends b3cft\IrcBot\ircPlugin
 
                 case 'showops':
                     $ops = implode(', ', array_keys($this->authUsers));
-                    $this->client->writeline("PRIVMSG $message->from : The following users have permissions to give/take ops:");
+                    $this->client->writeline(
+                        "PRIVMSG $message->from : ".
+                        'The following users have permissions to give/take ops:'
+                    );
                     $this->client->writeline("PRIVMSG $message->from : $ops.");
                 break;
             }
         }
     }
 
+    /**
+     * Add a user to the list of permitted operators
+     *
+     * @param string[] $users - users to add to ops list
+     *
+     * @return void
+     */
     private function addOp(array $users)
     {
         foreach ($users as $user)
@@ -133,6 +150,13 @@ class ops extends b3cft\IrcBot\ircPlugin
         }
     }
 
+    /**
+     * Remove users from the list of permitted operators
+     *
+     * @param string[] $users - users to remove from ops list
+     *
+     * @return void
+     */
     private function delOp(array $users)
     {
         foreach ($users as $user)
@@ -141,16 +165,41 @@ class ops extends b3cft\IrcBot\ircPlugin
         }
     }
 
+    /**
+     * Attempt to grant ops to users in channel
+     *
+     * @param string   $channel - channel to grant user ops to
+     * @param string[] $users   - array of users to grant ops to
+     *
+     * @return void
+     */
     private function op($channel, $users)
     {
         $this->mode($channel, '+o', $users);
     }
 
+    /**
+     * Attempt to remove ops from users in channel
+     *
+     * @param string   $channel - channel to remove user ops from
+     * @param string[] $users   - array of users to remove ops from
+     *
+     * @return void
+     */
     private function deop($channel, $users)
     {
         $this->mode($channel, '-o', $users);
     }
 
+    /**
+     * Make mode changes to users in channel
+     *
+     * @param string   $channel - channel to make mode change to
+     * @param string   $mode    - mode change to make
+     * @param string[] $users   - users to make change to
+     *
+     * @return void
+     */
     private function mode($channel, $mode, $users)
     {
         foreach ($users as $user)
@@ -159,6 +208,11 @@ class ops extends b3cft\IrcBot\ircPlugin
         }
     }
 
+    /**
+     * Return a list of commands the plugin responds to
+     *
+     * @return string[]
+     */
     public function getCommands()
     {
         return array('op', 'deop', 'addop', 'delop', 'showops');

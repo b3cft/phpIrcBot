@@ -49,20 +49,40 @@ class welcomer extends b3cft\IrcBot\ircPlugin
     private $channels = array();
     private $welcomes = array();
 
+    /**
+     * Constructor, do normal construct, then retreive state from disk
+     *
+     * @param ircConnection $client - ircConnection client for communication
+     * @param mixed[]       $config - configuration for this plugin
+     *
+     * @return welcomer
+     */
     public function __construct(ircConnection $client, array $config)
     {
         parent::__construct($client, $config);
         $this->retrieveData();
     }
 
+    /**
+     * Persist state to disk on destruct
+     *
+     * @return void
+     */
     public function __destruct()
     {
         $this->persistData();
     }
 
+    /**
+     * Retrieve state from disk
+     *
+     * @return void
+     */
     private function retrieveData()
     {
-        if (false !== realpath($this->config['datafile']) && true === is_readable($this->config['datafile']))
+        if (false !== realpath($this->config['datafile']) &&
+            true === is_readable($this->config['datafile'])
+            )
         {
             $file = file_get_contents($this->config['datafile']);
             $data = unserialize(gzuncompress($file));
@@ -73,15 +93,27 @@ class welcomer extends b3cft\IrcBot\ircPlugin
         }
     }
 
+    /**
+     * Persist state to disk
+     *
+     * @return void
+     */
     private function persistData()
     {
         $data = array(
-        	'channels' => $this->channels,
+            'channels' => $this->channels,
             'welcomes' => $this->welcomes,
             );
         file_put_contents($this->config['datafile'], gzcompress(serialize($data)));
     }
 
+    /**
+     * Process a message
+     *
+     * @param ircMessage $message - message to process
+     *
+     * @return void
+     */
     public function process(ircMessage $message)
     {
 
@@ -150,6 +182,13 @@ class welcomer extends b3cft\IrcBot\ircPlugin
         }
     }
 
+    /**
+     * Deliver stats as direct message to requestor
+     *
+     * @param string $to - user who requested stats
+     *
+     * @return void
+     */
     private function stats($to)
     {
         $this->client->writeline("PRIVMSG $to :I know of the following users per channel:");
@@ -159,6 +198,14 @@ class welcomer extends b3cft\IrcBot\ircPlugin
         }
     }
 
+    /**
+     * Welcome a user to a channel
+     *
+     * @param string $channel - channel to welcome user to
+     * @param string $user    - user to welcome
+     *
+     * @return void
+     */
     private function welcome($channel, $user)
     {
         if ('#' !== substr($channel, 0, 1))
@@ -173,6 +220,14 @@ class welcomer extends b3cft\IrcBot\ircPlugin
 
     }
 
+    /**
+     * Update the welcome to a channel message. send 'none' to blank
+     *
+     * @param string $channel - channel to update
+     * @param string $welcome - message to set welcome to, none to blank message
+     *
+     * @return return_type
+     */
     private function addWelcome($channel, $welcome)
     {
         if ('#' !== substr($channel, 0, 1))
@@ -194,6 +249,11 @@ class welcomer extends b3cft\IrcBot\ircPlugin
         }
     }
 
+    /**
+     * Return a list of commands the plugin responds to
+     *
+     * @return string[]
+     */
     public function getCommands()
     {
         return array('welcomeTopic', 'welcome');

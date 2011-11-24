@@ -46,6 +46,13 @@ use b3cft\IrcBot\ircMessage,
 class subber extends b3cft\IrcBot\ircPlugin
 {
 
+    /**
+     * Process a message
+     *
+     * @param ircMessage $message - message to process
+     *
+     * @return void
+     */
     public function process(ircMessage $message)
     {
         if ('PRIVMSG' === $message->action && 5 < strlen($message->message))
@@ -67,14 +74,22 @@ class subber extends b3cft\IrcBot\ircPlugin
         }
     }
 
+    /**
+     * apply a substitution on a message
+     *
+     * @param ircMessage $message - message containing command to substitute
+     * @param string[]   $matches - search and replace strings
+     *
+     * @return void
+     */
     private function sub($message, $matches)
     {
         $stack = $this->client->getMessageStack($message->channel);
         while($msg = array_pop($stack))
         {
             if($msg->message === $message->message ||
-            	's/' === substr($msg->message, 0, 2) ||
-            	'^' === substr($msg->message, 0, 1))
+                's/' === substr($msg->message, 0, 2) ||
+                '^' === substr($msg->message, 0, 1))
             {
                 continue;
             }
@@ -83,21 +98,33 @@ class subber extends b3cft\IrcBot\ircPlugin
             {
                 if ($msg->from === $message->from)
                 {
-                    $this->client->writeline("PRIVMSG $message->channel :$message->from: $newMessage");
+                    $this->client->writeline(
+                        "PRIVMSG $message->channel :$message->from: $newMessage"
+                    );
                 }
                 else
                 {
-                    $this->client->writeline("PRIVMSG $message->channel :$message->from -> $msg->from: $newMessage");
-              }
-              break;
+                    $this->client->writeline(
+                        "PRIVMSG $message->channel :$message->from -> $msg->from: $newMessage"
+                    );
+                }
+                break;
             }
         }
         if (true === isset($matches[3]) && '' === $matches[3])
         {
-            $this->client->writeline("PRIVMSG $message->channel :oh, and $message->from you need to work on your regular expession syntax.");
+            $this->client->writeline(
+                "PRIVMSG $message->channel :oh, and $message->from ".
+                'you need to work on your regular expession syntax.'
+            );
         }
     }
 
+    /**
+     * Return a list of commands the plugin responds to
+     *
+     * @return string[]
+     */
     public function getCommands()
     {
         return array();
