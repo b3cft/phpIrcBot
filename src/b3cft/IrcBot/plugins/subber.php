@@ -114,8 +114,8 @@ class subber extends b3cft\IrcBot\ircPlugin
         if (true === isset($matches[3]) && '' === $matches[3])
         {
             $this->client->writeline(
-                "PRIVMSG $message->channel :oh, and $message->from ".
-                'you need to work on your regular expession syntax.'
+                "PRIVMSG $message->channel :oh, and $message->from, ".
+                'you need to work on your regular expression syntax.'
             );
         }
     }
