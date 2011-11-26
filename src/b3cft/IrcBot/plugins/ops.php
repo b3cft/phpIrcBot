@@ -126,10 +126,10 @@ class ops extends b3cft\IrcBot\ircPlugin
                 case 'showops':
                     $ops = implode(', ', array_keys($this->authUsers));
                     $this->client->writeline(
-                        "PRIVMSG $message->from : ".
+                        "PRIVMSG $message->from :".
                         'The following users have permissions to give/take ops:'
                     );
-                    $this->client->writeline("PRIVMSG $message->from : $ops.");
+                    $this->client->writeline("PRIVMSG $message->from :$ops.");
                 break;
             }
         }
