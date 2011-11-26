@@ -40,6 +40,8 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
+use b3cft\IrcBot\ircMessage;
+
 /* Include PSR0 Autoloader and add dev path to search */
 if (false === defined('PSR0AUTOLOADER'))
 {
@@ -102,5 +104,247 @@ class opsTest extends PHPUnit_Framework_TestCase
         $this->assertArrayHasKey('deop', $keys);
         $this->assertArrayHasKey('addop', $keys);
         $this->assertArrayHasKey('delop', $keys);
+        $this->assertArrayHasKey('showops', $keys);
+    }
+
+    /**
+     * Test op and deop commands
+     *
+     * @param string $message   - message to respond to
+     * @param mixed  $responses - expected repsonses
+     *
+     * @dataProvider responsesDataProvider
+     *
+     * @return void
+     */
+    public function testResponses($message, $responses)
+    {
+        $plugin = new ops($this->client, $this->config);
+
+        if (true === is_null($responses))
+        {
+            $this->client->expects($this->never())
+                ->method('writeline');
+        }
+        else if (is_string($responses))
+        {
+            $this->client->expects($this->once())
+                ->method('writeline')
+                ->with($responses);
+        }
+        else if (true === is_array($responses))
+        {
+            foreach ($responses as $index => $response)
+            {
+                $this->client->expects($this->at($index))
+                    ->method('writeline')
+                    ->with($response);
+            }
+        }
+
+        $plugin->process(new ircMessage($message, 'unit'));
+    }
+
+    /**
+     * Data provider for testResponses
+     *
+     * @return mixed[]
+     */
+    public function responsesDataProvider()
+    {
+        return array(
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :op',
+                null,
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: some other message',
+                null,
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit some other message',
+                null,
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: op',
+                'MODE #test +o two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: op one',
+                'MODE #test +o one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: op four',
+                'MODE #test +o four',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG #test :unit: op',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG #test :unit: op one',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :op #test',
+                'MODE #test +o two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :op test',
+                'MODE #test +o two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :op #test one',
+                'MODE #test +o one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :op test one',
+                'MODE #test +o one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :op #test four',
+                'MODE #test +o four',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :op test four',
+                'MODE #test +o four',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG unit :op #test',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG unit :op test',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG unit :op #test one',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG unit :op test one',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG #test :unit: op one two three',
+                array(
+                    'MODE #test +o one',
+                    'MODE #test +o two',
+                    'MODE #test +o three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :op #test one two three',
+                array(
+                    'MODE #test +o one',
+                    'MODE #test +o two',
+                    'MODE #test +o three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :op test one two three',
+                array(
+                    'MODE #test +o one',
+                    'MODE #test +o two',
+                    'MODE #test +o three',
+                ),
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :deop',
+                null,
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: some other message',
+                null,
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit some other message',
+                null,
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: deop',
+                'MODE #test -o two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: deop one',
+                'MODE #test -o one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: deop four',
+                'MODE #test -o four',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG #test :unit: deop',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG #test :unit: deop one',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :deop #test',
+                'MODE #test -o two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :deop test',
+                'MODE #test -o two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :deop #test one',
+                'MODE #test -o one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :deop test one',
+                'MODE #test -o one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :deop #test four',
+                'MODE #test -o four',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :deop test four',
+                'MODE #test -o four',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG unit :deop #test',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG unit :deop test',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG unit :deop #test one',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG unit :deop test one',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG #test :unit: deop one two three',
+                array(
+                    'MODE #test -o one',
+                    'MODE #test -o two',
+                    'MODE #test -o three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :deop #test one two three',
+                array(
+                    'MODE #test -o one',
+                    'MODE #test -o two',
+                    'MODE #test -o three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :deop test one two three',
+                array(
+                    'MODE #test -o one',
+                    'MODE #test -o two',
+                    'MODE #test -o three',
+                ),
+            ),
+        );
     }
 }
