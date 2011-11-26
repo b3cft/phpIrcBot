@@ -40,7 +40,6 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
-use b3cft\IrcBot\ircPlugin;
 namespace b3cft\IrcBot;
 use b3cft\IrcBot\ircConnection,
     b3cft\IrcBot\ircMessage;
