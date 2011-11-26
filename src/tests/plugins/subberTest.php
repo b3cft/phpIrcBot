@@ -40,8 +40,9 @@
  * @version    @@PACKAGE_VERSION@@
  */
 
-/* Include PSR0 Autoloader and add dev path to search */
 use b3cft\IrcBot\ircMessage;
+
+/* Include PSR0 Autoloader and add dev path to search */
 if (false === defined('PSR0AUTOLOADER'))
 {
     include_once 'gwc.autoloader.php';
@@ -103,9 +104,9 @@ class subberTest extends PHPUnit_Framework_TestCase
     /**
      * Test substitution challenge responses
      *
-     * @param ircMessage[] $stack
-     * @param string       $message
-     * @param mixed        $response
+     * @param ircMessage[] $stack     - stack of messages available to the subber
+     * @param string       $message   - message to respond to
+     * @param mixed        $responses - expected repsonses
      *
      * @dataProvider responsesDataProvider
      *
@@ -142,7 +143,6 @@ class subberTest extends PHPUnit_Framework_TestCase
 
         $plugin->process(new ircMessage($message, 'unit'));
     }
-
 
     /**
      * Data provider for testResponses
@@ -200,7 +200,8 @@ class subberTest extends PHPUnit_Framework_TestCase
                 ':one!one@1.2.3 PRIVMSG #test :s/hat/glove',
                 array(
                     'PRIVMSG #test :one -> two: glove stand',
-                	'PRIVMSG #test :oh, and one, you need to work on your regular expression syntax.',
+                    'PRIVMSG #test :'.
+                     "oh, and one, you need to work on your regular expression syntax.",
                 ),
             ),
             array(
@@ -208,7 +209,8 @@ class subberTest extends PHPUnit_Framework_TestCase
                 ':two!two@1.2.3 PRIVMSG #test :s/hat/glove',
                 array(
                     'PRIVMSG #test :two: glove stand',
-                	'PRIVMSG #test :oh, and two, you need to work on your regular expression syntax.',
+                    'PRIVMSG #test :'.
+                    "oh, and two, you need to work on your regular expression syntax.",
                 ),
             ),
 
