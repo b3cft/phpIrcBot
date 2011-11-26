@@ -347,4 +347,89 @@ class opsTest extends PHPUnit_Framework_TestCase
             ),
         );
     }
+
+    /**
+     * Test that adding a new user to the ops list works
+     *
+     * @return void
+     */
+    public function testAddOpChannel()
+    {
+        $plugin = new ops($this->client, $this->config);
+
+        $this->assertArrayNotHasKey('four', $plugin->authUsers);
+
+        $plugin->process(new ircMessage(':one!one@1.2.3 PRIVMSG #test :unit: addop four', 'unit'));
+
+        $this->assertArrayHasKey('four', $plugin->authUsers);
+    }
+
+    /**
+     * Test that adding a new user to the ops list works
+     *
+     * @return void
+     */
+    public function testAddOpPrivateMessage()
+    {
+        $plugin = new ops($this->client, $this->config);
+
+        $this->assertArrayNotHasKey('four', $plugin->authUsers);
+
+        $plugin->process(new ircMessage(':one!one@1.2.3 PRIVMSG unit :addop four', 'unit'));
+
+        $this->assertArrayHasKey('four', $plugin->authUsers);
+    }
+
+    /**
+     * Test that removing a new user to the ops list works
+     *
+     * @return void
+     */
+    public function testDelOpChannel()
+    {
+        $plugin = new ops($this->client, $this->config);
+
+        $this->assertArrayHasKey('two', $plugin->authUsers);
+
+        $plugin->process(new ircMessage(':one!one@1.2.3 PRIVMSG #test :unit: delop two', 'unit'));
+
+        $this->assertArrayNotHasKey('two', $plugin->authUsers);
+    }
+
+    /**
+     * Test that removing a new user to the ops list works
+     *
+     * @return void
+     */
+    public function testDelOpPrivateMessage()
+    {
+        $plugin = new ops($this->client, $this->config);
+
+        $this->assertArrayHasKey('two', $plugin->authUsers);
+
+        $plugin->process(new ircMessage(':one!one@1.2.3 PRIVMSG unit :delop two', 'unit'));
+
+        $this->assertArrayNotHasKey('two', $plugin->authUsers);
+    }
+
+    /**
+     * Test that bot will show list of authorised users
+     *
+     * @return void
+     */
+    public function testShowOps()
+    {
+        $plugin = new ops($this->client, $this->config);
+
+        $this->client->expects($this->at(0))
+            ->method('writeline')
+            ->with('PRIVMSG one :The following users have permissions to give/take ops:');
+
+        $this->client->expects($this->at(1))
+            ->method('writeline')
+            ->with('PRIVMSG one :one, two, three.');
+
+        $plugin->process(new ircMessage(':one!one@1.2.3 PRIVMSG #test :unit: showops', 'unit'));
+
+    }
 }
