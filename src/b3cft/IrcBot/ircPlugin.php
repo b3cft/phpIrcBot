@@ -99,7 +99,7 @@ abstract class ircPlugin
         if (false === isset($this->authUsers[$user]))
         {
             $this->client->writeline(
-                "PRIVMSG $user : Sorry, you're not in my authorised users list."
+                "PRIVMSG $user :Sorry, you're not in my authorised users list."
             );
             return false;
         }
