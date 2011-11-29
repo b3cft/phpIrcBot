@@ -13,7 +13,7 @@
          stopOnSkipped="false"
          syntaxCheck="false"
          strict="true"
-         timeoutForSmallTests="5"
+         timeoutForSmallTests="15"
          verbose="true">
 
 	<testsuites>
