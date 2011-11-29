@@ -46,8 +46,8 @@ use b3cft\IrcBot\ircMessage,
 class welcomer extends b3cft\IrcBot\ircPlugin
 {
 
-    private $channels = array();
-    private $welcomes = array();
+    protected $channels = array();
+    protected $welcomes = array();
 
     /**
      * Constructor, do normal construct, then retreive state from disk
@@ -81,6 +81,7 @@ class welcomer extends b3cft\IrcBot\ircPlugin
     private function retrieveData()
     {
         if (false !== realpath($this->config['datafile']) &&
+            true === is_file($this->config['datafile']) &&
             true === is_readable($this->config['datafile'])
             )
         {
@@ -100,11 +101,16 @@ class welcomer extends b3cft\IrcBot\ircPlugin
      */
     private function persistData()
     {
-        $data = array(
-            'channels' => $this->channels,
-            'welcomes' => $this->welcomes,
-            );
-        file_put_contents($this->config['datafile'], gzcompress(serialize($data)));
+        if (false === is_null($this->config['datafile']) &&
+            false === is_dir($this->config['datafile'])
+            )
+        {
+            $data = array(
+                'channels' => $this->channels,
+                'welcomes' => $this->welcomes,
+                );
+            file_put_contents($this->config['datafile'], gzcompress(serialize($data)));
+        }
     }
 
     /**
@@ -178,6 +184,15 @@ class welcomer extends b3cft\IrcBot\ircPlugin
                         $this->addWelcome($channel, $welcome);
                     }
                 break;
+
+                case 'showwelcomers':
+                    $ops = implode(', ', array_keys($this->authUsers));
+                    $this->client->writeline(
+                        "PRIVMSG $message->from :".
+                        'The following users have permissions to set topic messages:'
+                    );
+                    $this->client->writeline("PRIVMSG $message->from :$ops.");
+                break;
             }
         }
     }
@@ -214,7 +229,7 @@ class welcomer extends b3cft\IrcBot\ircPlugin
         }
         if (false === empty($this->welcomes[$channel]))
         {
-            $this->client->writeline("PRIVMSG $channel : $user: {$this->welcomes[$channel]}");
+            $this->client->writeline("PRIVMSG $channel :$user: {$this->welcomes[$channel]}");
         }
 
 
@@ -234,16 +249,16 @@ class welcomer extends b3cft\IrcBot\ircPlugin
         {
             $channel = '#'.$channel;
         }
-        if (false === empty($welcome))
+        if ('none' === strtolower($welcome))
+        {
+            unset($this->welcomes[$channel]);
+        }
+        else if (false === empty($welcome))
         {
             $this->welcomes[$channel] = $welcome;
             $this->persistData();
         }
-        else if ('none' === strtolower($welcome))
-        {
-            unset($this->welcomes[$channel]);
-        }
-        else
+        else if (false === empty($this->welcomes[$channel]))
         {
             $this->client->writeline("PRIVMSG $channel :{$this->welcomes[$channel]}");
         }
