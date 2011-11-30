@@ -814,11 +814,11 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Check that plugins getDiskCommands return
+     * Check that getDiskCommands return found disk commands
      *
      * @return void
      */
-    public function testPluginsGetDiskCommands()
+    public function testGetDiskCommands()
     {
         $this->config['commandpath']  = '../../tests/fixtures';
         $conn = new ircConnection($this->config, $this->socket, $this->client);
@@ -829,7 +829,11 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
 
         $this->socket->expects($this->at(0))
             ->method('write')
-            ->with($this->equalTo('PRIVMSG b3cft :?command-one, ?command_two, ?commandthree, join, kick'));
+            ->with(
+                $this->equalTo(
+                    'PRIVMSG b3cft :?command-one, ?command_two, ?commandthree, join, kick'
+                )
+            );
 
         $this->socket->expects($this->at(1))
             ->method('write')
@@ -843,6 +847,213 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->setAccessible(true);
 
         $method->invoke($conn, $msg);
+    }
+
+    /**
+     * Test pong returns correctly
+     *
+     * @return void
+     */
+    public function testPong()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->at(0))
+            ->method('write')
+            ->with($this->equalTo('PONG :irc.test.server'));
+
+        $this->socket->expects($this->at(1))
+            ->method('write')
+            ->with($this->equalTo('PONG :irc.another.server'));
+
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'pong');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, 'PING :irc.test.server');
+        $method->invoke($conn, 'PING :irc.another.server');
+    }
+
+
+    /**
+     * Check that getDiskCommands return error
+     *
+     * @return void
+     */
+    public function testGetDiskCommandsNoPath()
+    {
+        $this->expectOutputRegex('/^Command path not found/');
+
+        $this->config['commandpath']  = '../../tests/wibblewobblewoo';
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $msg  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG unittest :commands', 'unittest'
+        );
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+
+        $this->socket->expects($this->at(0))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :join, kick, leave, part, ping'));
+
+        $this->socket->expects($this->at(1))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :stats, uptime, version'));
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msg);
+    }
+
+
+    /**
+     * Check that execute Disk Commands return error with non existant path
+     *
+     * @return void
+     */
+    public function testExecuteDiskCommandsNoPath()
+    {
+        $this->expectOutputRegex('/^Command path not found/');
+
+        $this->config['commandpath']  = '../../tests/wibblewobblewoo';
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $msg  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG #test :?test', 'unittest'
+        );
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+
+        $this->socket->expects($this->once())
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG #test :command failed'));
+
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msg);
+    }
+
+    /**
+     * Check that execute Disk Commands catches directory traversal attempt
+     *
+     * @return void
+     */
+    public function testExecuteDiskCommandsDirectoryTraversal()
+    {
+        $this->expectOutputRegex('/^b3cft attempted to call /');
+
+        $this->config['commandpath']  = '../../tests/fixtures';
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $msg  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG #test :?../../../../../../../../../../../bin/ls', 'unittest'
+        );
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+
+        $this->socket->expects($this->never())
+            ->method('write');
+
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msg);
+    }
+
+    /**
+     * Test disk commands get executed and return expected response(s)
+     *
+     * @param string   $message   - raw message recieved
+     * @param string[] $responses - expected response(s)
+     *
+     * @dataProvider diskCommandDataProvider
+     *
+     * @return void
+     */
+    public function testDiskCommands($message, $responses)
+    {
+        $this->config['commandpath']  = '../../tests/fixtures';
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $msg  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG '.$message, 'unittest'
+        );
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+
+        if (true === is_null($responses))
+        {
+            $this->socket->expects($this->never())
+                ->method('write');
+        }
+        else if (true === is_array($responses))
+        {
+            foreach ($responses as $index => $response)
+            {
+                $this->socket->expects($this->at($index))
+                    ->method('write')
+                    ->with($this->equalTo('PRIVMSG '.$response));
+            }
+        }
+        else
+        {
+            $this->socket->expects($this->once())
+                ->method('write')
+                ->with($this->equalTo('PRIVMSG '.$responses));
+        }
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msg);
+    }
+
+    /**
+     * Data provider for testDiskCommands
+     *
+     * @return string[]
+     */
+    public function diskCommandDataProvider()
+    {
+        return array(
+            array(
+                '#test :?command-doesntexist',
+                '#test :command failed'
+            ),
+            array(
+                'unittest :?command-doesntexist',
+                'b3cft :command failed'
+            ),
+            array(
+                '#test :?command-one',
+                '#test :'
+            ),
+            array(
+                'unittest :?command-one',
+                'b3cft :'
+            ),
+            array(
+                '#test :unittest ?command-one',
+                '#test :'
+            ),
+            array(
+                '#test :?command_two',
+                '#test :unittest #test b3cft ?command_two'
+            ),
+            array(
+                '#test :unittest ?command_two',
+                '#test :unittest #test b3cft ?command_two'
+            ),
+            array(
+                '#test :unittest: ?command_two',
+                '#test :unittest #test b3cft ?command_two'
+            ),
+            array(
+                'unittest :?command_two',
+                'b3cft :unittest null b3cft ?command_two'
+            ),
+            array(
+                '#test :?command-one hello world',
+                '#test :hello world'
+            ),
+        );
     }
 
     /**
