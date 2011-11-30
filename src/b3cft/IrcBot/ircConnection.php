@@ -459,12 +459,13 @@ class ircConnection
         {
             $to = $message->channel;
         }
+        $command = $exec.' '.
+            escapeshellcmd($this->nick).' '.
+            escapeshellcmd($channel).' '.
+            escapeshellcmd($message->from).' '.
+            escapeshellcmd($message->message).' 2>/dev/null';
+        exec($command, $output, $return);
 
-        exec(
-            "$exec '$this->nick' '$channel' '$message->from' $message->message 2>/dev/null",
-            $output,
-            $return
-        );
         if (0 !== $return)
         {
             $this->writeline("PRIVMSG $to :command failed");

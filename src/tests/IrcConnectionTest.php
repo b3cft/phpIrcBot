@@ -1053,7 +1053,15 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
                 '#test :?command-one hello world',
                 '#test :hello world'
             ),
-        );
+            array(
+                '#test :?command-one `ls /`',
+                '#test :`ls /`'
+            ),
+            array(
+                '#test :?command-one |cat /etc/passwd',
+                '#test :|cat /etc/passwd'
+            ),
+            );
     }
 
     /**
