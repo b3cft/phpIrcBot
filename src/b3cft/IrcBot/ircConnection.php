@@ -132,7 +132,7 @@ class ircConnection
         $this->connected            = false;
         $this->connectAttemptsMade  = 0;
         $this->join                 = (false === empty($configuration[self::JOIN]))
-                                      ? explode(',', $configuration[self::JOIN])
+                                      ? array_flip(explode(',', $configuration[self::JOIN]))
                                       : array();
         $this->nicks                = explode(',', $configuration[self::NICK]);
         $this->pass                 = (false === empty($configuration[self::PASS]))
@@ -288,10 +288,13 @@ class ircConnection
             {
                 $channel = '#'.$channel;
             }
-            $key = array_search($channel, $this->join);
-            if (false !== $key)
+            if (false === empty($this->join[$channel]))
             {
-                unset($this->join[$key]);
+                unset($this->join[$channel]);
+            }
+            if (false === empty($this->channels[$channel]))
+            {
+                unset($this->channels[$channel]);
             }
             $this->writeline("PART $channel");
         }
@@ -320,7 +323,7 @@ class ircConnection
     {
         if (true === is_null($channel))
         {
-            $channels = $this->join;
+            $channels = array_flip($this->join);
         }
         else
         {
@@ -333,10 +336,7 @@ class ircConnection
             {
                 $channel = '#'.$channel;
             }
-            if (false === in_array($channel, $this->join))
-            {
-                $this->join[] = $channel;
-            }
+            $this->join[$channel]   = true;
             $this->uptime[$channel] = time();
             $this->writeline("JOIN $channel");
         }
@@ -355,13 +355,10 @@ class ircConnection
         $commands = array(
             'join',
             'leave',
-            'voice',
-            'devoice',
             'part',
             'stats',
             'uptime',
             'kick',
-            'part',
             'version',
             'ping'
         );
@@ -370,6 +367,7 @@ class ircConnection
         {
             $commands = array_merge($commands, $plugin->getCommands());
         }
+        $commands = array_flip(array_flip($commands));
         sort($commands);
 
         for ($i = 0, $max=count($commands); $i<$max; $i=$i+5)
@@ -477,79 +475,6 @@ class ircConnection
             {
                 $this->writeline("PRIVMSG $to :$line");
             }
-        }
-    }
-
-    /**
-     * Grant operator status to a user
-     *
-     * @param string   $channel - channel to change user mode on
-     * @param string[] $users   - users to change mode
-     *
-     * @return void
-     */
-    private function op($channel, $users)
-    {
-        $this->mode($channel, '+o', $users);
-    }
-
-    /**
-     * Remove operator status from users
-     *
-     * @param string   $channel - channel to change user mode on
-     * @param string[] $users   - users to change mode
-     *
-     * @return void
-     */
-    private function deop($channel, $users)
-    {
-        $this->mode($channel, '-o', $users);
-    }
-
-    /**
-     * Grant voice status from users
-     *
-     * @param string   $channel - channel to change user mode on
-     * @param string[] $users   - users to change mode
-     *
-     * @return void
-     */
-    private function voice($channel, $users)
-    {
-        $this->mode($channel, '+v', $users);
-    }
-
-    /**
-     * Remove voice status from users
-     *
-     * @param string   $channel - channel to change user mode on
-     * @param string[] $users   - users to change mode
-     *
-     * @return void
-     */
-    private function devoice($channel, $users)
-    {
-        $this->mode($channel, '-v', $users);
-    }
-
-    /**
-     * Add or remove status from users
-     *
-     * @param string   $channel - channel to change user mode on
-     * @param string   $mode    - mode to change
-     * @param string[] $users   - users to change mode
-     *
-     * @return void
-     */
-    private function mode($channel, $mode, $users)
-    {
-        if ('#' !== substr($channel, 0, 1))
-        {
-            $channel = '#'.$channel;
-        }
-        foreach ($users as $user)
-        {
-            $this->writeline("MODE $channel $mode $user");
         }
     }
 
@@ -717,26 +642,6 @@ class ircConnection
 
                 case "version":
                     $response = "b3cft's phpbot Version @@PACKAGE_VERSION@@";
-                break;
-
-                case 'voice':
-                case 'devoice':
-                    if (0 === count($params) && true === $message->isInChannel)
-                    {
-                        $this->$command($message->channel, array($message->from));
-                    }
-                    else if(true === $message->isInChannel)
-                    {
-                        $this->$command($message->channel, $params);
-                    }
-                    else if (1 === count($params))
-                    {
-                        $this->$command($params[0], array($message->from));
-                    }
-                    else if(2 <= count($params))
-                    {
-                        $this->$command($params[0], array_slice($params, 1));
-                    }
                 break;
 
                 case 'commands':

@@ -72,6 +72,8 @@ class ops extends b3cft\IrcBot\ircPlugin
             {
                 case 'op':
                 case 'deop':
+                case 'voice':
+                case 'devoice':
                     if (true === $this->isAuthorised($message->from))
                     {
                         if (0 === count($params) && true === $message->isInChannel)
@@ -192,6 +194,32 @@ class ops extends b3cft\IrcBot\ircPlugin
     }
 
     /**
+     * Attempt to grant voice to user(s) in channel
+     *
+     * @param string   $channel - channel to grant user voice to
+     * @param string[] $users   - array of users to grant voice to
+     *
+     * @return void
+     */
+    private function voice($channel, $users)
+    {
+        $this->mode($channel, '+v', $users);
+    }
+
+    /**
+     * Attempt to remove voice from users in channel
+     *
+     * @param string   $channel - channel to remove user voice from
+     * @param string[] $users   - array of users to remove voice from
+     *
+     * @return void
+     */
+    private function devoice($channel, $users)
+    {
+        $this->mode($channel, '-v', $users);
+    }
+
+    /**
      * Make mode changes to users in channel
      *
      * @param string   $channel - channel to make mode change to
@@ -215,6 +243,6 @@ class ops extends b3cft\IrcBot\ircPlugin
      */
     public function getCommands()
     {
-        return array('op', 'deop', 'addop', 'delop', 'showops');
+        return array('voice', 'devoice', 'op', 'deop', 'addop', 'delop', 'showops');
     }
 }

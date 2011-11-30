@@ -189,78 +189,6 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test granting of ops
-     *
-     * @return void
-     */
-    public function testOp()
-    {
-        $conn = new ircConnection($this->config, $this->socket, $this->client);
-        $this->socket->expects($this->once())
-            ->method('write')
-            ->with($this->equalTo('MODE #channel +o bob'));
-        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
-
-        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'op');
-        $method->setAccessible(true);
-        $method->invoke($conn, '#channel', array('bob'));
-    }
-
-    /**
-     * Test revoking of ops
-     *
-     * @return void
-     */
-    public function testDeop()
-    {
-        $conn = new ircConnection($this->config, $this->socket, $this->client);
-        $this->socket->expects($this->once())
-            ->method('write')
-            ->with($this->equalTo('MODE #channel -o bob'));
-        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
-
-        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'deop');
-        $method->setAccessible(true);
-        $method->invoke($conn, '#channel', array('bob'));
-    }
-
-    /**
-     * Test granting of voice
-     *
-     * @return void
-     */
-    public function testVoice()
-    {
-        $conn = new ircConnection($this->config, $this->socket, $this->client);
-        $this->socket->expects($this->once())
-            ->method('write')
-            ->with($this->equalTo('MODE #channel +v bob'));
-        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
-
-        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'voice');
-        $method->setAccessible(true);
-        $method->invoke($conn, '#channel', array('bob'));
-    }
-
-    /**
-     * Test revoking of ops
-     *
-     * @return void
-     */
-    public function testDevoice()
-    {
-        $conn = new ircConnection($this->config, $this->socket, $this->client);
-        $this->socket->expects($this->once())
-            ->method('write')
-            ->with($this->equalTo('MODE #channel -v bob'));
-        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
-
-        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'devoice');
-        $method->setAccessible(true);
-        $method->invoke($conn, '#channel', array('bob'));
-    }
-
-    /**
      * Test a given message triggers a response from the bot to the socket connection
      *
      * @param string $rawMsg      - raw message received
@@ -312,38 +240,6 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
             array(
             ':b3cft!b3cft@.IP PRIVMSG unittest :join frameworksdev',
             'JOIN #frameworksdev'
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: voice',
-            'MODE #frameworks +v b3cft'
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: devoice',
-            'MODE #frameworks -v b3cft'
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: voice bob',
-            'MODE #frameworks +v bob'
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: devoice bob',
-            'MODE #frameworks -v bob'
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG unittest :voice #frameworksdev',
-            'MODE #frameworksdev +v b3cft'
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG unittest :devoice frameworksdev',
-            'MODE #frameworksdev -v b3cft'
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG unittest :voice #frameworksdev bob',
-            'MODE #frameworksdev +v bob'
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG unittest :devoice frameworksdev bob',
-            'MODE #frameworksdev -v bob'
             ),
             array(
             ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: leave',
@@ -460,11 +356,11 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
             ),
             array(
             ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: commands',
-            'PRIVMSG b3cft :devoice, join, kick, leave, part'
+            'PRIVMSG b3cft :join, kick, leave, part, ping'
             ),
             array(
             ':b3cft!b3cft@.IP PRIVMSG unittest :commands',
-            'PRIVMSG b3cft :devoice, join, kick, leave, part'
+            'PRIVMSG b3cft :join, kick, leave, part, ping'
             ),
         );
     }
@@ -538,31 +434,15 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
                 'PART #three',
             )
             ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: voice one two three',
-            array(
-                'MODE #frameworks +v one',
-                'MODE #frameworks +v two',
-                'MODE #frameworks +v three',
-            )
-            ),
-            array(
-            ':b3cft!b3cft@.IP PRIVMSG unittest :voice frameworks one two three',
-            array(
-                'MODE #frameworks +v one',
-                'MODE #frameworks +v two',
-                'MODE #frameworks +v three',
-            )
-            ),
         );
     }
 
     /**
-     * Check that the client quits if we tell it to in a channel request
+     * Check that the client returns the time if we ask it to in a channel request
      *
      * @return void
      */
-    public function testQuitInChannel()
+    public function testTimeInChannel()
     {
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
@@ -581,11 +461,11 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Check that the client quits if we tell it to in a private message
+     * Check that the client returns the time if we ask it to in a private message
      *
      * @return void
      */
-    public function testQuitInPrivate()
+    public function testTimeInPrivate()
     {
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
@@ -605,11 +485,11 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * Check that the client returns the time if we ask in a channel
+     * Check that the client quits if we ask in a channel
      *
      * @return void
      */
-    public function testTimeInChannel()
+    public function testQuitInChannel()
     {
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
@@ -628,11 +508,11 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * check that the client returns the time if we ask in a private message
+     * check that the client quits if we ask in a private message
      *
      * @return void
      */
-    public function testTimeInPrivate()
+    public function testQuitInPrivate()
     {
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
@@ -657,14 +537,16 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
      */
     public function testProcessMsg()
     {
+        $this->config['helpurl'] = 'http://b3cft.com/';
+
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
-            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: voice',
+            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: help',
             'unittest'
         );
         $this->socket->expects($this->any())
             ->method('write')
-            ->with($this->equalTo('MODE #frameworks +v b3cft'));
+            ->with($this->equalTo('PRIVMSG #frameworks :http://b3cft.com/'));
         $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
 
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
@@ -847,5 +729,128 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->setAccessible(true);
 
         $method->invoke($conn, $msg);
+    }
+
+    /**
+     * Check that plugins getCommands on plugins integrate
+     *
+     * @return void
+     */
+    public function testPluginsGetCommands()
+    {
+        $plugin = $this->getMock(
+            'b3cft\IrcBot\ircPlugin',
+            array('process', 'getCommands'),
+            array(), '', false
+        );
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $msg  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG unittest :commands', 'unittest'
+        );
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $conn->registerPlugin($plugin);
+
+        $this->assertAttributeCount(1, 'plugins', $conn);
+
+        $plugin->expects($this->at(1))
+            ->method('getCommands')
+            ->will($this->returnValue(array('one', 'two', 'three')));
+
+        $this->socket->expects($this->at(0))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :join, kick, leave, one, part'));
+
+        $this->socket->expects($this->at(1))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :ping, stats, three, two, uptime'));
+
+        $this->socket->expects($this->at(2))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :version'));
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msg);
+    }
+
+    /**
+     * Check that plugins getCommands on merge correctly
+     *
+     * @return void
+     */
+    public function testPluginsGetCommandsDeDupe()
+    {
+        $plugin = $this->getMock(
+            'b3cft\IrcBot\ircPlugin',
+            array('process', 'getCommands'),
+            array(), '', false
+        );
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $msg  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG unittest :commands', 'unittest'
+        );
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $conn->registerPlugin($plugin);
+
+        $this->assertAttributeCount(1, 'plugins', $conn);
+
+        $plugin->expects($this->at(1))
+            ->method('getCommands')
+            ->will($this->returnValue(array('join', 'leave', 'stats')));
+
+        $this->socket->expects($this->at(0))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :join, kick, leave, part, ping'));
+
+        $this->socket->expects($this->at(1))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :stats, uptime, version'));
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msg);
+    }
+
+
+    /**
+     * Check that leaving a channel removes the channel history
+     *
+     * @return void
+     */
+    public function testLeaveChannelUnset()
+    {
+        $conn     = new ircConnection($this->config, $this->socket, $this->client);
+        $msgJoin  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: join frameworksdev',
+            'unittest'
+        );
+        $msgTalk  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG #frameworksdev :hello world',
+            'unittest'
+        );
+        $msgPart  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: part frameworksdev',
+            'unittest'
+        );
+        $this->socket->expects($this->at(0))
+            ->method('write')
+            ->with($this->equalTo('JOIN #frameworksdev'));
+        $this->socket->expects($this->at(1))
+            ->method('write')
+            ->with($this->equalTo('PART #frameworksdev'));
+            $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msgJoin);
+        $method->invoke($conn, $msgTalk);
+        $this->assertArrayHasKey('#frameworksdev', $conn->join, 'join');
+        $this->assertArrayHasKey('#frameworksdev', $conn->channels, 'channels');
+        $method->invoke($conn, $msgPart);
+        $this->assertArrayNotHasKey('#frameworksdev', $conn->join, 'join');
+        $this->assertArrayNotHasKey('#frameworksdev', $conn->channels, 'channels');
     }
 }

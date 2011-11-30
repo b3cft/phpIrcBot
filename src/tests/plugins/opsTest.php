@@ -158,6 +158,10 @@ class opsTest extends PHPUnit_Framework_TestCase
                 null,
             ),
             array(
+                ':two!two@1.2.3 PRIVMSG #test :voice',
+                null,
+            ),
+            array(
                 ':two!two@1.2.3 PRIVMSG #test :unit: some other message',
                 null,
             ),
@@ -176,6 +180,18 @@ class opsTest extends PHPUnit_Framework_TestCase
             array(
                 ':two!two@1.2.3 PRIVMSG #test :unit: op four',
                 'MODE #test +o four',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: voice',
+                'MODE #test +v two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: voice one',
+                'MODE #test +v one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: voice four',
+                'MODE #test +v four',
             ),
             array(
                 ':four!four@1.2.3 PRIVMSG #test :unit: op',
@@ -208,6 +224,30 @@ class opsTest extends PHPUnit_Framework_TestCase
             array(
                 ':two!two@1.2.3 PRIVMSG unit :op test four',
                 'MODE #test +o four',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :voice #test',
+                'MODE #test +v two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :voice test',
+                'MODE #test +v two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :voice #test one',
+                'MODE #test +v one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :voice test one',
+                'MODE #test +v one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :voice #test four',
+                'MODE #test +v four',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :voice test four',
+                'MODE #test +v four',
             ),
             array(
                 ':four!four@1.2.3 PRIVMSG unit :op #test',
@@ -250,6 +290,30 @@ class opsTest extends PHPUnit_Framework_TestCase
                 ),
             ),
             array(
+                ':one!one@1.2.3 PRIVMSG #test :unit: voice one two three',
+                array(
+                    'MODE #test +v one',
+                    'MODE #test +v two',
+                    'MODE #test +v three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :voice #test one two three',
+                array(
+                    'MODE #test +v one',
+                    'MODE #test +v two',
+                    'MODE #test +v three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :voice test one two three',
+                array(
+                    'MODE #test +v one',
+                    'MODE #test +v two',
+                    'MODE #test +v three',
+                ),
+            ),
+            array(
                 ':two!two@1.2.3 PRIVMSG #test :deop',
                 null,
             ),
@@ -274,11 +338,31 @@ class opsTest extends PHPUnit_Framework_TestCase
                 'MODE #test -o four',
             ),
             array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: devoice',
+                'MODE #test -v two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: devoice one',
+                'MODE #test -v one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG #test :unit: devoice four',
+                'MODE #test -v four',
+            ),
+            array(
                 ':four!four@1.2.3 PRIVMSG #test :unit: deop',
                 'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
             ),
             array(
                 ':four!four@1.2.3 PRIVMSG #test :unit: deop one',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG #test :unit: devoice',
+                'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
+            ),
+            array(
+                ':four!four@1.2.3 PRIVMSG #test :unit: devoice one',
                 'PRIVMSG four :Sorry, you\'re not in my authorised users list.',
             ),
             array(
@@ -304,6 +388,30 @@ class opsTest extends PHPUnit_Framework_TestCase
             array(
                 ':two!two@1.2.3 PRIVMSG unit :deop test four',
                 'MODE #test -o four',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :devoice #test',
+                'MODE #test -v two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :devoice test',
+                'MODE #test -v two',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :devoice #test one',
+                'MODE #test -v one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :devoice test one',
+                'MODE #test -v one',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :devoice #test four',
+                'MODE #test -v four',
+            ),
+            array(
+                ':two!two@1.2.3 PRIVMSG unit :devoice test four',
+                'MODE #test -v four',
             ),
             array(
                 ':four!four@1.2.3 PRIVMSG unit :deop #test',
@@ -343,6 +451,30 @@ class opsTest extends PHPUnit_Framework_TestCase
                     'MODE #test -o one',
                     'MODE #test -o two',
                     'MODE #test -o three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG #test :unit: devoice one two three',
+                array(
+                    'MODE #test -v one',
+                    'MODE #test -v two',
+                    'MODE #test -v three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :devoice #test one two three',
+                array(
+                    'MODE #test -v one',
+                    'MODE #test -v two',
+                    'MODE #test -v three',
+                ),
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :devoice test one two three',
+                array(
+                    'MODE #test -v one',
+                    'MODE #test -v two',
+                    'MODE #test -v three',
                 ),
             ),
         );
