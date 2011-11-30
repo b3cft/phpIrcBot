@@ -97,7 +97,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
             'helpurl'         => 'someurl',
             'nick'            => 'unittest',
             'user'            => 'unittest',
-            'commandpath'     => '../../tests/fixtures',
+            'commandpath'     => null,
             'connectAttempts' => 2,
             'reconnectwait'   => 0,
             'reconnect'          => 1,
@@ -813,6 +813,37 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->invoke($conn, $msg);
     }
 
+    /**
+     * Check that plugins getDiskCommands return
+     *
+     * @return void
+     */
+    public function testPluginsGetDiskCommands()
+    {
+        $this->config['commandpath']  = '../../tests/fixtures';
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $msg  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG unittest :commands', 'unittest'
+        );
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+
+        $this->socket->expects($this->at(0))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :?command-one, ?command_two, ?commandthree, join, kick'));
+
+        $this->socket->expects($this->at(1))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :leave, part, ping, stats, uptime'));
+
+        $this->socket->expects($this->at(2))
+            ->method('write')
+            ->with($this->equalTo('PRIVMSG b3cft :version'));
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msg);
+    }
 
     /**
      * Check that leaving a channel removes the channel history
