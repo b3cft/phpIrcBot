@@ -87,7 +87,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     {
         $this->socket = $this->getMock(
             'b3cft\IrcBot\ircSocket',
-            array('write', 'connect'), array(), '', false
+            array('read', 'write', 'connect'), array(), '', false
         );
         $this->client = $this->getMock(
             'b3cft\IrcBot\ircBot',
@@ -181,6 +181,142 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $this->socket->expects($this->once())
             ->method('connect')
             ->will($this->returnValue(false));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+    }
+
+    /**
+     * Test a full connect and with a failed login
+     *
+     * @return void
+     */
+    public function testConnectWithFailedLogin()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->at(0))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(1))
+            ->method('read')
+            ->will($this->returnValue(':irc.server NOTICE AUTH :*** Looking up your hostname...1'));
+
+        $this->socket->expects($this->at(2))
+            ->method('write')
+            ->with($this->equalTo('NICK unittest'))
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(3))
+            ->method('read')
+            ->will($this->returnValue(''));
+
+        $this->socket->expects($this->at(4))
+            ->method('write')
+            ->with($this->equalTo('USER unittest 0 * :php scripted bot by b3cft'))
+            ->will($this->returnValue(false));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+    }
+
+    /**
+     * Test a full connect and with a nick already in use
+     *
+     * @return void
+     */
+    public function testConnectFailAtNick()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->at(0))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(1))
+            ->method('read')
+            ->will($this->returnValue(':irc.server NOTICE AUTH :*** Looking up your hostname...1'));
+
+        $this->socket->expects($this->at(2))
+            ->method('write')
+            ->with($this->equalTo('NICK unittest'))
+            ->will($this->returnValue(false));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+    }
+
+
+    /**
+     * Test a full connect and with a nick already in use
+     *
+     * @return void
+     */
+    public function testConnectFailAfterNick()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->at(0))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(1))
+            ->method('read')
+            ->will($this->returnValue(':irc.server NOTICE AUTH :*** Looking up your hostname...1'));
+
+        $this->socket->expects($this->at(2))
+            ->method('write')
+            ->with($this->equalTo('NICK unittest'))
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(1))
+            ->method('read')
+            ->will($this->returnValue(true));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+    }
+
+
+    /**
+     * Test a full connect and login
+     *
+     * @return void
+     */
+    public function testConnectLogin()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->at(0))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(1))
+            ->method('read')
+            ->will($this->returnValue(':irc.server NOTICE AUTH :*** Looking up your hostname...1'));
+
+        $this->socket->expects($this->at(2))
+            ->method('write')
+            ->with($this->equalTo('NICK unittest'))
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(3))
+            ->method('read')
+            ->will($this->returnValue(''));
+
+        $this->socket->expects($this->at(4))
+            ->method('write')
+            ->with($this->equalTo('USER unittest 0 * :php scripted bot by b3cft'))
+            ->will($this->returnValue(true));
 
         $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
@@ -874,7 +1010,6 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->invoke($conn, 'PING :irc.another.server');
     }
 
-
     /**
      * Check that getDiskCommands return error
      *
@@ -904,7 +1039,6 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
 
         $method->invoke($conn, $msg);
     }
-
 
     /**
      * Check that execute Disk Commands return error with non existant path
