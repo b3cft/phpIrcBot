@@ -1103,4 +1103,38 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $this->assertArrayNotHasKey('#frameworksdev', $conn->join, 'join');
         $this->assertArrayNotHasKey('#frameworksdev', $conn->channels, 'channels');
     }
+
+    /**
+     * Test that we get the correct data for a message stack request
+     *
+     * @return void
+     */
+    public function testGetMessageStack()
+    {
+        $conn   = new ircConnection($this->config, $this->socket, $this->client);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        for ($i=1; $i<=30; $i++)
+        {
+            $method->invoke(
+                $conn,
+                new ircMessage(':one!one@1.2 PRIVMSG #test :message '.$i, 'unit')
+            );
+        }
+        $messages = $conn->getMessageStack('#test');
+        $this->assertEquals(30, count($messages), 'total stack length incorrect');
+
+        $messages = $conn->getMessageStack('#test', 10);
+        $this->assertEquals(10, count($messages), 'sub selected stack length incorrect');
+
+        $this->assertAttributeEquals('message 21', 'message', $messages[0]);
+        $this->assertAttributeEquals('message 30', 'message', $messages[9]);
+
+        $messages = $conn->getMessageStack('#test', 10, 10);
+        $this->assertEquals(10, count($messages), 'offset sub selected stack length incorrect');
+
+        $this->assertAttributeEquals('message 11', 'message', $messages[0]);
+        $this->assertAttributeEquals('message 20', 'message', $messages[9]);
+    }
 }

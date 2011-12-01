@@ -239,7 +239,6 @@ class ircConnection
         }
         $this->debugPrint('Outside the loop...');
         $nickIndex = 0;
-        $loggedIn  = false;
         while($nickIndex < count($this->nicks))
         {
             $this->debugPrint("Sending NICK {$this->nicks[$nickIndex]}...");
@@ -547,19 +546,30 @@ class ircConnection
     }
 
     /**
-     * Retrieve the current messages heard in a channel
+     * Retrieve the most recent current messages heard in a channel
      *
-     * @param string $channel - channel to receive messages from
+     * @param string  $channel - channel to receive messages from
+     * @param integer $count   - number of messages to return (default: all)
+     * @param integer $offset  - offset from the oldest (default: 0)
      *
      * @return ircMessage[]
      */
-    public function getMessageStack($channel)
+    public function getMessageStack($channel, $count=null, $offset=0)
     {
+        $channels = array();
         if (false === empty($this->channels[$channel]))
         {
-            return $this->channels[$channel];
+            if (true === is_numeric($count))
+            {
+
+                $channels = array_slice($this->channels[$channel], -($count+$offset), $count);
+            }
+            else
+            {
+                $channels = $this->channels[$channel];
+            }
         }
-        return array();
+        return $channels;
     }
 
     /**
