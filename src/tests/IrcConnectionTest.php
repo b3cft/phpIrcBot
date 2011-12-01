@@ -406,6 +406,76 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test the run function
+     *
+     * @return void
+     */
+    public function testRun()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->at(0))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(1))
+            ->method('read')
+            ->will($this->returnValue(':irc.server NOTICE AUTH :*** Looking up your hostname...1'));
+
+        $this->socket->expects($this->at(2))
+            ->method('write')
+            ->with($this->equalTo('NICK unittest'))
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(3))
+            ->method('read')
+            ->will($this->returnValue(''));
+
+        $this->socket->expects($this->at(4))
+            ->method('write')
+            ->with($this->equalTo('USER unittest 0 * :php scripted bot by b3cft'))
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(5))
+            ->method('read')
+            ->will($this->returnValue(false));
+
+        $this->socket->expects($this->at(6))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(7))
+            ->method('read')
+            ->will($this->returnValue(':irc.server NOTICE AUTH :*** Looking up your hostname...1'));
+
+        $this->socket->expects($this->at(8))
+            ->method('write')
+            ->with($this->equalTo('NICK unittest'))
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(9))
+            ->method('read')
+            ->will($this->returnValue(''));
+
+        $this->socket->expects($this->at(10))
+            ->method('write')
+            ->with($this->equalTo('USER unittest 0 * :php scripted bot by b3cft'))
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(11))
+            ->method('read')
+            ->will($this->returnValue(':one!one@1.2.3 JOIN :#test'));
+
+        $this->socket->expects($this->at(12))
+            ->method('read')
+            ->will($this->returnValue(':one!one@1.2.3 PRIVMSG unittest :!quit'));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+
+        $conn->run();
+    }
+
+    /**
      * Test a given message triggers a response from the bot to the socket connection
      *
      * @param string $rawMsg      - raw message received
