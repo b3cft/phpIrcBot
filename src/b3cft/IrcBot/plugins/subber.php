@@ -84,7 +84,7 @@ class subber extends b3cft\IrcBot\ircPlugin
      */
     private function sub($message, $matches)
     {
-        $stack = $this->client->getMessageStack($message->channel);
+        $stack = $this->client->getMessageStack($message->channel, 20);
         while($msg = array_pop($stack))
         {
             if($msg->message === $message->message ||
