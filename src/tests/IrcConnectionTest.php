@@ -226,6 +226,47 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test another logic to get full coverage. Yeah, bite me!
+     *
+     * @return void
+     */
+    public function testConnectToGetCoverage()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->at(0))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(1))
+            ->method('read')
+            ->will($this->returnValue(':irc.server WELCOME :*** some blurb...1'));
+
+        $this->socket->expects($this->at(2))
+            ->method('read')
+            ->will($this->returnValue(':irc.server NOTICE AUTH :*** Looking up your hostname...2'));
+
+        $this->socket->expects($this->at(3))
+            ->method('write')
+            ->with($this->equalTo('NICK unittest'))
+            ->will($this->returnValue(true));
+
+        $this->socket->expects($this->at(4))
+            ->method('read')
+            ->will($this->returnValue(''));
+
+        $this->socket->expects($this->at(5))
+            ->method('write')
+            ->with($this->equalTo('USER unittest 0 * :php scripted bot by b3cft'))
+            ->will($this->returnValue(false));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+    }
+
+    /**
      * Test a full connect and with a nick already in use
      *
      * @return void
@@ -322,6 +363,46 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
         $method->setAccessible(true);
         $method->invoke($conn);
+    }
+
+    /**
+     * Test TalkIRC when receiving a PING Keepalive
+     *
+     * @return void
+     */
+    public function testTalkIRCPing()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->once())
+            ->method('write')
+            ->with($this->equalTo('PONG :irc.server'))
+            ->will($this->returnValue(true));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'talkIRC');
+        $method->setAccessible(true);
+        $result = $method->invoke($conn, 'PING :irc.server');
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test TalkIRC when receiving a JOIN
+     *
+     * @return void
+     */
+    public function testTalkIRCJoin()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->socket->expects($this->never())
+            ->method('write');
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'talkIRC');
+        $method->setAccessible(true);
+        $result = $method->invoke($conn, ':one!one@1.2.3 PRIVMSG unittest :!quit');
+        $this->assertFalse($result);
     }
 
     /**
