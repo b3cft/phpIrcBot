@@ -250,12 +250,6 @@ class ircConnection
             }
             if ('' === ($received = $this->readline()))
             {
-                if (false === $received)
-                {
-                    $this->debugPrint('Connection failed...');
-                    return false;
-                }
-
                 $this->nick = $this->nicks[$nickIndex];
                 $this->debugPrint("Sending USER {$this->user}...");
                 $status = $this->writeline("USER {$this->user} 0 * :php scripted bot by b3cft");
