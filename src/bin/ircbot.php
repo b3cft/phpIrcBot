@@ -42,9 +42,7 @@
  */
 
 namespace b3cft\IrcBot;
-use b3cft\CoreUtils\Config,
-    b3cft\CoreUtils\Registry,
-    b3cft\getopt;
+use b3cft\CoreUtils\Config;
 require_once 'gwc.autoloader.php';
 $devPath = realpath(dirname(__FILE__).'/../');
 if (false === empty($devPath))
@@ -56,7 +54,6 @@ if (false === empty($devPath))
 define('DEFAULT_CONFIG', '@@DATA_DIR@@/IRCBot/ircbot.ini');
 
 /* Register the config object in registry */
-Registry::getInstance()->register('Config', Config::getInstance());
-$cliOptions = getopt::getOptions('f:');
+$params = array(IrcBot::PARAM_CONFIG_OBJ => Config::getInstance());
 /* Start the IRC bot */
-IrcBot::getInstance()->init();
+IrcBot::getInstance()->init($params);

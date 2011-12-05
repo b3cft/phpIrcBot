@@ -41,7 +41,7 @@
  */
 
 use b3cft\IrcBot\IrcBot,
-    b3cft\CoreUtils\Registry;
+    b3cft\CoreUtils\Config;
 
 /* Include PSR0 Autoloader and add dev path to search */
 if (false === defined('PSR0AUTOLOADER'))
@@ -101,11 +101,7 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
             false                     /* Call the constructor  */
         );
 
-
-
-        Registry::getInstance()->register('Config', $mockConfig);
-
-        IrcBot::getInstance()->init();
+        IrcBot::getInstance()->init(array(IrcBot::PARAM_CONFIG_OBJ => $mockConfig));
 
         $this->assertAttributeEquals(
             $mockConfig,
@@ -132,9 +128,7 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
 
         define('DEFAULT_CONFIG', dirname(__FILE__).'/fixtures/dummyConfig.ini');
 
-        Registry::getInstance()->register('Config', $mockConfig);
-
-        IrcBot::getInstance()->init();
+        IrcBot::getInstance()->init(array(IrcBot::PARAM_CONFIG_OBJ => $mockConfig));
 
         $this->assertAttributeEquals(
             $mockConfig,
@@ -159,9 +153,10 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
             false                     /* Call the constructor  */
         );
 
-        $params = array(IrcBot::PARAM_CONFIG_FILE => dirname(__FILE__).'/fixtures/dummyConfig.ini');
-
-        Registry::getInstance()->register('Config', $mockConfig);
+        $params = array(
+            IrcBot::PARAM_CONFIG_FILE => dirname(__FILE__).'/fixtures/dummyConfig.ini',
+            IrcBot::PARAM_CONFIG_OBJ  => $mockConfig
+        );
 
         IrcBot::getInstance()->init($params);
 
@@ -172,6 +167,21 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
             'MockConfig not compositied onto IrcBot'
         );
     }
+
+    /**
+     * Test init with missing config
+     *
+     * @return void
+     */
+    public function testInitWithMissingConfig()
+    {
+        $this->setExpectedException('b3cft\IrcBot\IrcException');
+
+        $params = array();
+
+        IrcBot::getInstance()->init($params);
+    }
+
 
     /**
      * Test reseting singleton for testing purposes
@@ -188,8 +198,7 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
             false                     /* Call the constructor  */
         );
 
-        Registry::getInstance()->register('Config', $mockConfig);
-        IrcBot::getInstance()->init();
+        IrcBot::getInstance()->init(array(IrcBot::PARAM_CONFIG_OBJ => $mockConfig));
         $this->assertAttributeEquals(
             $mockConfig,
             'config',

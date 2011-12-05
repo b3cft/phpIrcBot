@@ -57,6 +57,7 @@ class IrcBot
 {
 
     const PARAM_CONFIG_FILE = 'configfile';
+    const PARAM_CONFIG_OBJ  = 'config';
     private static $instance;
     public static $testing = false;
 
@@ -106,7 +107,11 @@ class IrcBot
      */
     public function init($params = array())
     {
-        $this->config = Registry::getInstance()->retrieve('Config');
+        if (true === empty($params[self::PARAM_CONFIG_OBJ]))
+        {
+            throw new IrcException('Config object not passed at init');
+        }
+        $this->config = $params[self::PARAM_CONFIG_OBJ];
         if (false === empty($params[self::PARAM_CONFIG_FILE]))
         {
             $config = $params[self::PARAM_CONFIG_FILE];
@@ -177,7 +182,6 @@ class IrcBot
 
     }
 
-
     /**
      * Run the irc connections, fork if necessary
      *
@@ -202,7 +206,7 @@ class IrcBot
                 $pid = pcntl_fork();
                 if ($pid == -1)
                 {
-                    die("Stopping, could not Fork\n");
+                    throw new IrcException('Could not Fork');
                 }
                 elseif(!$pid)
                 {
@@ -249,4 +253,8 @@ class IrcBot
             echo print_r($message, true)."\n";
         }
     }
+}
+
+class IrcException extends \Exception
+{
 }
