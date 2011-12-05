@@ -112,7 +112,6 @@ class ircSocket
     {
         if (true === is_resource($this->socket))
         {
-            $arrOpt = array('l_onoff' => 1, 'l_linger' => 1);
             socket_set_block($this->socket);
             socket_close($this->socket);
             $this->socket=null;
