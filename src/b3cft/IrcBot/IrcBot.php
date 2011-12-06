@@ -254,7 +254,3 @@ class IrcBot
         }
     }
 }
-
-class IrcException extends \Exception
-{
-}
