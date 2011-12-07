@@ -7,3 +7,4 @@ build/coverage
 build/packages
 src/package.xml
 src/b3cft/IrcBot/commands/*
+src/data/ircbot.ini
