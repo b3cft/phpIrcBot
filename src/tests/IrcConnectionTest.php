@@ -738,7 +738,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         );
         $this->socket->expects($this->once())
             ->method('write')
-            ->with($this->equalTo('PRIVMSG b3cft :'.date('Y-m-d H:i:s')));
+            ->with($this->matchesRegularExpression('/^PRIVMSG b3cft :20[0-9]{2}-[01][0-9]-[0-3][0-9] [012][0-9]:[0-6][0-9]:[0-6][0-9]$/'));
         $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
 
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
@@ -761,7 +761,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         );
         $this->socket->expects($this->once())
             ->method('write')
-            ->with($this->equalTo('PRIVMSG b3cft :'.date('Y-m-d H:i:s')));
+            ->with($this->matchesRegularExpression('/^PRIVMSG b3cft :20[0-9]{2}-[01][0-9]-[0-3][0-9] [012][0-9]:[0-6][0-9]:[0-6][0-9]$/'));
         $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
 
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
