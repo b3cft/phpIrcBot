@@ -1422,4 +1422,36 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $this->assertAttributeEquals('message 11', 'message', $messages[0]);
         $this->assertAttributeEquals('message 20', 'message', $messages[9]);
     }
+
+    /**
+     * Test to reproduce error when rejoining channels after a split/server restart
+     *
+     * @group regression
+     * @group bugs
+     *
+     * @return void
+     */
+    public function testJoinFailureIssue1()
+    {
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+        $msg  = new ircMessage(
+            ':b3cft!b3cft@.IP PRIVMSG unittest :join test',
+            'unittest'
+        );
+        $this->socket->expects($this->any())
+            ->method('write')
+            ->with($this->equalTo('JOIN #test'));
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        $method->invoke($conn, $msg);
+
+        $join = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'join');
+        $join->setAccessible(true);
+
+        $join->invoke($conn);
+    }
+
 }

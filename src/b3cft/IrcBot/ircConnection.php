@@ -281,7 +281,7 @@ class ircConnection
             {
                 $channel = '#'.$channel;
             }
-            if (false === empty($this->join[$channel]))
+            if (true === isset($this->join[$channel]))
             {
                 unset($this->join[$channel]);
             }
@@ -329,7 +329,9 @@ class ircConnection
             {
                 $channel = '#'.$channel;
             }
-            $this->join[$channel]   = true;
+            $channels   = array_flip($this->join);
+            $channels[] = $channel;
+            $this->join = array_flip($channels);
             $this->uptime[$channel] = time();
             $this->writeline("JOIN $channel");
         }
