@@ -32,10 +32,36 @@
      <file name="IrcBot.php" role="php">
       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
      </file>
+     <file name="ircConnection.php" role="php">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+     <file name="ircException.php" role="php">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+     <file name="ircMessage.php" role="php">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+     <file name="ircPlugin.php" role="php">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+     <file name="ircSocket.php" role="php">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+     <dir name="plugins">
+      <file name="ops.php" role="php">
+       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+      </file>
+      <file name="subber.php" role="php">
+       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+      </file>
+      <file name="welcomer.php" role="php">
+       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+      </file>
+     </dir>
     </dir>
    </dir>
    <dir name="data">
-    <file name="ircbot.ini" role="data"/>
+    <file name="ircbot.example.ini" role="data"/>
    </dir>
    <dir name="bin">
     <file name="ircbot.php" role="script">
@@ -46,8 +72,44 @@
      <file name="IrcBotTest.php" role="test">
       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
      </file>
+     <file name="IrcConnectionTest.php" role="test">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+     <file name="IrcMessageTest.php" role="test">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
+     <file name="IrcPluginTest.php" role="test">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+      <tasks:replace from="@@PHP_DIR@@" to="php_dir" type="pear-config" /> 
+     </file>
+     <file name="IrcSocketTest.php" role="test">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+     </file>
      <dir name="fixtures">
+      <file name="command-one" role="test" />
+      <file name="command_two" role="test" />
+      <file name="commandthree" role="test" />
       <file name="dummyConfig.ini" role="test" />
+    </dir>
+    <dir name="plugins">
+     <file name="opsTest.php" role="test">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+      <tasks:replace from="@@PHP_DIR@@" to="php_dir" type="pear-config" /> 
+     </file>
+     <file name="subberTest.php" role="test">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+      <tasks:replace from="@@PHP_DIR@@" to="php_dir" type="pear-config" /> 
+     </file>
+     <file name="welcomerTest.php" role="test">
+      <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+      <tasks:replace from="@@PHP_DIR@@" to="php_dir" type="pear-config" />
+     </file>
+     <dir name="fixtures">
+      <file name="__null__" role="test">
+        <tasks:postinstallscript>
+        </tasks:postinstallscript>
+      </file>
+     </dir>
     </dir>
    </dir>
   </dir>
@@ -78,10 +140,21 @@
  <phprelease>
   <filelist>
     <install as="ircbot" name="bin/ircbot.php" />
-    <install as="ircbot.ini" name="data/ircbot.ini" />
+    <install as="ircbot.example.ini" name="data/ircbot.example.ini" />
     <!-- remove the extraneous test directory -->
     <install as="IrcBotTest.php" name="tests/IrcBotTest.php" />
+    <install as="IrcConnectionTest.php" name="tests/IrcConnectionTest.php" />
+    <install as="IrcMessageTest.php" name="tests/IrcMessageTest.php" />
+    <install as="IrcPluginTest.php" name="tests/IrcPluginTest.php" />
+    <install as="IrcSocketTest.php" name="tests/IrcSocketTest.php" />
     <install as="fixtures/dummyConfig.ini" name="tests/fixtures/dummyConfig.ini" />
+    <install as="fixtures/command-one" name="tests/fixtures/command-one" />
+    <install as="fixtures/command_two" name="tests/fixtures/command_two" />
+    <install as="fixtures/commandthree" name="tests/fixtures/commandthree" />
+    <install as="plugins/opsTest.php" name="tests/plugins/opsTest.php" />
+    <install as="plugins/subberTest.php" name="tests/plugins/subberTest.php" />
+    <install as="plugins/welcomerTest.php" name="tests/plugins/welcomerTest.php" />
+    <install as="plugins/fixtures/__null__" name="tests/plugins/fixtures/__null__" />
   </filelist>
  </phprelease>
  <changelog>

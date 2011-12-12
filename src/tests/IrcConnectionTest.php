@@ -294,7 +294,6 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->invoke($conn);
     }
 
-
     /**
      * Test a full connect and with a nick already in use
      *
@@ -326,7 +325,6 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->setAccessible(true);
         $method->invoke($conn);
     }
-
 
     /**
      * Test a full connect and login

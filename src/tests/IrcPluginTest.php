@@ -53,7 +53,20 @@ if (false === defined('PSR0AUTOLOADER'))
     }
     define('PSR0AUTOLOADER', true);
 }
-
+if (false === defined('PRS0PLUGINS'))
+{
+    define('PHP_DIR', '@@PHP_DIR@@');
+    if (PHP_DIR !== '@@'.'PHP_DIR'.'@@')
+    {
+        __gwc_autoload_alsoSearch(PHP_DIR.'/b3cft/IRCBot/plugins');
+    }
+    $devPath = realpath(dirname(__FILE__).'/../b3cft/IrcBot/plugins/');
+    if (false === empty($devPath))
+    {
+        __gwc_autoload_alsoSearch($devPath);
+    }
+    define('PRS0PLUGINS', true);
+}
 
 /**
  * Test ircPlugin methods
