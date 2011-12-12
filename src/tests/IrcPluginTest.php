@@ -56,7 +56,7 @@ if (false === defined('PSR0AUTOLOADER'))
 if (false === defined('PRS0PLUGINS'))
 {
     define('PHP_DIR', '@@PHP_DIR@@');
-    if (PHP_DIR !== '@@'.'PHP_DIR'.'@@')
+    if (PHP_DIR !== '@@'."PHP_DIR".'@@')
     {
         __gwc_autoload_alsoSearch(PHP_DIR.'/b3cft/IRCBot/plugins');
     }
