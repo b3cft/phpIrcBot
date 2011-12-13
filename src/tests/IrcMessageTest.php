@@ -55,10 +55,7 @@ if (false === defined('PSR0AUTOLOADER'))
 }
 
 /**
- *
- *
  * @author b3cft
- * @covers b3cft\IrcBot\ircMessage
  */
 class ircMessageTest extends PHPUnit_Framework_TestCase
 {

@@ -55,8 +55,6 @@ if (false === defined('PSR0AUTOLOADER'))
 }
 
 /**
- *
- *
  * @author b3cft
  */
 class ircSocketTest extends PHPUnit_Framework_TestCase
