@@ -890,6 +890,8 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
      */
     public function testProcessMsgDiskCommandInChannel()
     {
+
+        $this->setCommandFixturesPath();
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
             ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: ?dosomething',
@@ -1115,7 +1117,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
      */
     public function testGetDiskCommands()
     {
-        $this->config['commandpath']  = '../../tests/fixtures';
+        $this->setCommandFixturesPath();
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
             ':b3cft!b3cft@.IP PRIVMSG unittest :commands', 'unittest'
@@ -1235,7 +1237,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     {
         $this->expectOutputRegex('/^b3cft attempted to call /');
 
-        $this->config['commandpath']  = '../../tests/fixtures';
+        $this->setCommandFixturesPath();
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
             ':b3cft!b3cft@.IP PRIVMSG #test :?../../../../../../../../../../../bin/ls', 'unittest'
@@ -1264,7 +1266,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
      */
     public function testDiskCommands($message, $responses)
     {
-        $this->config['commandpath']  = '../../tests/fixtures';
+        $this->setCommandFixturesPath();
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage(
             ':b3cft!b3cft@.IP PRIVMSG '.$message, 'unittest'
@@ -1462,4 +1464,50 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $join->invoke($conn);
     }
 
+    /**
+     * Work out and update the fixtures path when we're running from a pear installed version
+     *
+     * @return void
+     */
+    private function setCommandFixturesPath()
+    {
+        $phpdir  = '@@PHP_DIR@@/b3cft/IrcBot';
+        $testdir = '@@TEST_DIR@@/IRCBot/fixtures';
+        if (
+            $phpdir === '@@'."PHP_DIR".'@@/b3cft/IrcBot' ||
+            $testdir === '@@'."TEST_DIR".'@@/IRCBot/fixtures'
+            )
+        {
+            $this->config['commandpath']  = '../../tests/fixtures';
+        }
+        else
+        {
+            $phpdir  = explode(DIRECTORY_SEPARATOR, $phpdir);
+            $testdir = explode(DIRECTORY_SEPARATOR, $testdir);
+            $len     = count($phpdir) < count($testdir) ? count($phpdir) : count($testdir);
+            for ($i = 0 ; $i < $len ; $i++)
+            {
+                if ($phpdir[$i] !== $testdir[$i])
+                {
+                    break;
+                }
+            }
+            $this->config['commandpath']
+                = str_repeat('..'.DIRECTORY_SEPARATOR, count($phpdir) - $i).
+                implode(DIRECTORY_SEPARATOR, array_slice($testdir, $i));
+
+            $commandPath = realpath($this->config['commandpath']);
+
+            if (
+                false !== realpath($commandPath.DIRECTORY_SEPARATOR.'command-one') &&
+                false === is_executable($commandPath.DIRECTORY_SEPARATOR.'command-one')
+                )
+            {
+                $this->markTestSkipped(
+                    'fixtures tests commands are not executable please chmod +x them at '.
+                    $commandPath
+                );
+            }
+        }
+    }
 }

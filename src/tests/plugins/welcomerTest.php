@@ -87,9 +87,18 @@ class welcomerTest extends PHPUnit_Framework_TestCase
     {
         $this->config = array(
             'enabled'  => 'true',
-            'users'    => 'one,two,three',
-            'datafile' => __DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR,
+            'users'    => 'one,two,three'
         );
+        if (PHP_DIR === '@@'."PHP_DIR".'@@')
+        {
+            $this->config['datafile'] = __DIR__.DIRECTORY_SEPARATOR.'fixtures'.DIRECTORY_SEPARATOR;
+        }
+        else
+        {
+            $this->config['datafile'] = '/tmp/';
+        }
+
+
         $this->client = $this->getMock(
             'b3cft\IrcBot\ircConnection',
             array('writeline', 'getMessageStack', '__destruct'), array(), '', false

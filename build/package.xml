@@ -74,6 +74,8 @@
      </file>
      <file name="IrcConnectionTest.php" role="test">
       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
+      <tasks:replace from="@@PHP_DIR@@" to="php_dir" type="pear-config" />
+      <tasks:replace from="@@TEST_DIR@@" to="test_dir" type="pear-config" />
      </file>
      <file name="IrcMessageTest.php" role="test">
       <tasks:replace from="@@PACKAGE_VERSION@@" to="version" type="package-info" />
@@ -106,8 +108,6 @@
      </file>
      <dir name="fixtures">
       <file name="__null__" role="test">
-        <tasks:postinstallscript>
-        </tasks:postinstallscript>
       </file>
      </dir>
     </dir>
