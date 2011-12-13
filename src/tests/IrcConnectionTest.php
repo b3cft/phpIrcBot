@@ -57,11 +57,7 @@ if (false === defined('PSR0AUTOLOADER'))
 }
 
 /**
- *
- *
  * @author b3cft
- * @covers b3cft\IrcBot\IrcConnection
- *
  */
 class IrcConnectionTest extends PHPUnit_Framework_TestCase
 {
@@ -1431,6 +1427,38 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
 
         $this->assertAttributeEquals('message 11', 'message', $messages[0]);
         $this->assertAttributeEquals('message 20', 'message', $messages[9]);
+    }
+
+    /**
+     * Test that we don't keep too many messages in the stack
+     *
+     * @return void
+     */
+    public function testMessageStackLength()
+    {
+        $conn   = new ircConnection($this->config, $this->socket, $this->client);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
+        $method->setAccessible(true);
+
+        for ($i=1; $i<=30; $i++)
+        {
+            $method->invoke(
+                $conn,
+                new ircMessage(':one!one@1.2 PRIVMSG #test :message '.$i, 'unit')
+            );
+        }
+
+        $this->assertCount(30, $conn->channels['#test']);
+
+        for ($i=31; $i<=60; $i++)
+        {
+            $method->invoke(
+                $conn,
+                new ircMessage(':one!one@1.2 PRIVMSG #test :message '.$i, 'unit')
+            );
+        }
+
+        $this->assertCount(50, $conn->channels['#test']);
     }
 
     /**

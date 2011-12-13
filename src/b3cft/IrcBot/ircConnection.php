@@ -59,6 +59,7 @@ class ircConnection
     const MAX_STACK_LEN = 200;
     const SECS_DAY      = 86400;
     const SECS_HOUR     = 3600;
+    const MAX_BACKLOG   = 50;
 
     const JOIN        = 'join';
     const NICK        = 'nick';
@@ -580,6 +581,10 @@ class ircConnection
         if ('PRIVMSG' === $message->action)
         {
             $this->channels[$message->channel][] = $message;
+            if (self::MAX_BACKLOG < count($this->channels[$message->channel]))
+            {
+                array_shift($this->channels[$message->channel]);
+            }
             if (true === empty($this->messageCount[$message->channel]))
             {
                 $this->messageCount[$message->channel] = 1;
