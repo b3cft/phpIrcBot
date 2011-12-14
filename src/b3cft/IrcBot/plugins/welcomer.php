@@ -200,16 +200,16 @@ class welcomer extends b3cft\IrcBot\ircPlugin
     /**
      * Deliver stats as direct message to requestor
      *
-     * @param string $to - user who requested stats
+     * @param string $replyTo - user who requested stats
      *
      * @return void
      */
-    private function stats($to)
+    private function stats($replyTo)
     {
-        $this->client->writeline("PRIVMSG $to :I know of the following users per channel:");
+        $this->client->writeline("PRIVMSG $replyTo :I know of the following users per channel:");
         foreach ($this->channels as $channel=>$users)
         {
-            $this->client->writeline("PRIVMSG $to :$channel : ".count($users));
+            $this->client->writeline("PRIVMSG $replyTo :$channel : ".count($users));
         }
     }
 

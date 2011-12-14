@@ -342,11 +342,11 @@ class ircConnection
     /**
      * Send a list of commands available to an IRC user
      *
-     * @param string $to - irc user to send list of commands to
+     * @param string $replyTo - irc user to send list of commands to
      *
      * @return void
      */
-    private function getCommands($to)
+    private function getCommands($replyTo)
     {
         $commands = array(
             'join',
@@ -369,7 +369,7 @@ class ircConnection
         for ($i = 0, $max=count($commands); $i<$max; $i=$i+5)
         {
             $cmds = array_slice($commands, $i, 5);
-            $this->writeline("PRIVMSG $to :".implode(', ', $cmds));
+            $this->writeline("PRIVMSG $replyTo :".implode(', ', $cmds));
         }
     }
 
@@ -445,7 +445,7 @@ class ircConnection
          */
         $channel = $message->channel;
         $from    = $message->from;
-        $to      = $message->from;
+        $replyTo = $message->from;
 
         if ($channel == $from)
         {
@@ -453,7 +453,7 @@ class ircConnection
         }
         else
         {
-            $to = $message->channel;
+            $replyTo = $message->channel;
         }
         $command = $exec.' '.
             escapeshellcmd($this->nick).' '.
@@ -464,13 +464,13 @@ class ircConnection
 
         if (0 !== $return)
         {
-            $this->writeline("PRIVMSG $to :command failed");
+            $this->writeline("PRIVMSG $replyTo :command failed");
         }
         else
         {
             foreach($output as $line)
             {
-                $this->writeline("PRIVMSG $to :$line");
+                $this->writeline("PRIVMSG $replyTo :$line");
             }
         }
     }
@@ -497,37 +497,37 @@ class ircConnection
     /**
      * Display uptime stats to a user
      *
-     * @param unknown_type $to - user to display stats to
+     * @param string $replyTo - user to display stats to
      *
      * @return void
      */
-    private function uptime($to)
+    private function uptime($replyTo)
     {
-        $this->writeline("PRIVMSG $to :I have the following uptime record:");
+        $this->writeline("PRIVMSG $replyTo :I have the following uptime record:");
         foreach ($this->uptime as $channel=>$uptime)
         {
-            $this->writeline("PRIVMSG $to :$channel : ".$this->formatUptime($uptime));
+            $this->writeline("PRIVMSG $replyTo :$channel : ".$this->formatUptime($uptime));
         }
     }
 
     /**
      * Display statistics to a user who requests them
      *
-     * @param string $to - user to display stats to
+     * @param string $replyTo - user to display stats to
      *
      * @return void
      */
-    private function stats($to)
+    private function stats($replyTo)
     {
-        $this->uptime($to);
+        $this->uptime($replyTo);
         $this->writeline(
-            "PRIVMSG $to :I have seen in the following number of messages per channel/user:"
+            "PRIVMSG $replyTo :I have seen in the following number of messages per channel/user:"
         );
         foreach ($this->messageCount as $channel=>$count)
         {
-            $this->writeline("PRIVMSG $to :$channel : $count messages");
+            $this->writeline("PRIVMSG $replyTo :$channel : $count messages");
         }
-        $this->writeline("PRIVMSG $to :I have ".count($this->plugins).' plugins registered');
+        $this->writeline("PRIVMSG $replyTo :I have ".count($this->plugins).' plugins registered');
     }
 
     /**
