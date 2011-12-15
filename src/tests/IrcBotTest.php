@@ -174,7 +174,6 @@ class IrcBotTest extends PHPUnit_Framework_TestCase
         IrcBot::getInstance()->init($params);
     }
 
-
     /**
      * Test reseting singleton for testing purposes
      *
