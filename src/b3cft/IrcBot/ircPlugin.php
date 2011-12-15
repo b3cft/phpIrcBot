@@ -95,7 +95,7 @@ abstract class ircPlugin
      */
     protected function isAuthorised($user)
     {
-        if (false === isset($this->authUsers[$user]))
+        if (false === isset($this->authUsers['*']) && false === isset($this->authUsers[$user]))
         {
             $this->client->writeline(
                 "PRIVMSG $user :Sorry, you're not in my authorised users list."

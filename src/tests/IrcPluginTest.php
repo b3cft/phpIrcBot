@@ -132,6 +132,47 @@ class IrcPluginTest extends PHPUnit_Framework_TestCase
      *
      * @return void
      */
+    public function testIsAuthorisedOnlyWildcard()
+    {
+        $this->config['users'] = '*';
+        $plugin = new ops($this->client, $this->config);
+
+        $this->client->expects($this->never())
+            ->method('writeline');
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircPlugin', 'isAuthorised');
+        $method->setAccessible(true);
+        $result = $method->invoke($plugin, 'two');
+
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test user authorisation
+     *
+     * @return void
+     */
+    public function testIsAuthorisedAddedWildcard()
+    {
+        $this->config['users'] .= ',*';
+        $plugin = new ops($this->client, $this->config);
+
+        $this->client->expects($this->never())
+            ->method('writeline');
+
+        $method = new ReflectionMethod('b3cft\IrcBot\ircPlugin', 'isAuthorised');
+        $method->setAccessible(true);
+        $result = $method->invoke($plugin, 'four');
+
+        $this->assertTrue($result);
+    }
+
+
+    /**
+     * Test user authorisation
+     *
+     * @return void
+     */
     public function testIsNotAuthorised()
     {
         $plugin = new ops($this->client, $this->config);
