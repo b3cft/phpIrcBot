@@ -229,6 +229,22 @@ class welcomerTest extends PHPUnit_Framework_TestCase
                 'PRIVMSG #test :one: welcome to the #test channel',
             ),
             array(
+                ':two!two@1.2.3 JOIN :#test',
+                'PRIVMSG #test :two: welcome to the #test channel',
+            ),
+            array(
+                ':two_!two@1.2.3 JOIN :#test',
+                null,
+            ),
+            array(
+                ':two__!two@1.2.3 JOIN :#test',
+                null,
+            ),
+            array(
+                ':_two_!two@1.2.3 JOIN :#test',
+                null,
+            ),
+            array(
                 ':four!four@1.2.3 PRIVMSG #test :unit: welcome one two three',
                 'PRIVMSG #test :one, two, three: welcome to the #test channel',
             ),
@@ -244,22 +260,22 @@ class welcomerTest extends PHPUnit_Framework_TestCase
                 ':four!four@1.2.3 PRIVMSG unit :stats',
                 array(
                     'PRIVMSG four :I know of the following users per channel:',
-                    'PRIVMSG four :#test : 1',
+                    'PRIVMSG four :#test : 2',
                 )
             ),
             array(
-                ':two!two@1.2.3 JOIN :#test',
-                'PRIVMSG #test :two: welcome to the #test channel',
+                ':three!two@1.2.3 JOIN :#test',
+                'PRIVMSG #test :three: welcome to the #test channel',
             ),
             array(
-                ':two!two@1.2.3 JOIN :#test',
+                ':three!three@1.2.3 JOIN :#test',
                 null,
             ),
             array(
                 ':four!four@1.2.3 PRIVMSG #test :unit: stats',
                 array(
                     'PRIVMSG four :I know of the following users per channel:',
-                    'PRIVMSG four :#test : 2',
+                    'PRIVMSG four :#test : 3',
                 )
             ),
             array(

@@ -125,9 +125,9 @@ class welcomer extends b3cft\IrcBot\ircPlugin
 
         if ('JOIN' === $message->action &&
             $message->from !== $message->nick &&
-            true === empty($this->channels[$message->channel][$message->from]))
+            true === empty($this->channels[$message->channel][trim($message->from, '_')]))
         {
-            $this->channels[$message->channel][$message->from] = $message->time;
+            $this->channels[$message->channel][trim($message->from, '_')] = $message->time;
             $this->welcome($message->channel, $message->from);
             $this->persistData();
         }
