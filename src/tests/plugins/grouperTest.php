@@ -230,6 +230,18 @@ class grouperTest extends PHPUnit_Framework_TestCase
                 'PRIVMSG #test :^^ two',
             ),
             array(
+                ':one!one@1.2.3 PRIVMSG #test :groupa, please could you look at this.',
+                'PRIVMSG #test :^^ two',
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG #test :groupa? Please could you look at this.',
+                'PRIVMSG #test :^^ two',
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG #test :groupa; Please could you look at this.',
+                'PRIVMSG #test :^^ two',
+            ),
+            array(
                 ':one!one@1.2.3 PRIVMSG #test :groupb Please could you look at this.',
                 'PRIVMSG #test :^^ two, three, four',
             ),

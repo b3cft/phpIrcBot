@@ -131,7 +131,7 @@ class grouper extends b3cft\IrcBot\ircPlugin
             $command = $message->message;
             $params  = array();
         }
-        $command = trim($command, ':');
+        $command = trim($command, ':;,? ');
         if ('PRIVMSG' === $message->action && true === $message->isToMe)
         {
             if ('group' === $command && true === empty($params) && false === empty($this->groups))
