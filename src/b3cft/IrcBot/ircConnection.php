@@ -462,11 +462,7 @@ class ircConnection
             escapeshellcmd($message->message).' 2>/dev/null';
         exec($command, $output, $return);
 
-        if (0 !== $return)
-        {
-            $this->writeline("PRIVMSG $replyTo :command failed");
-        }
-        else
+        if (0 === $return)
         {
             foreach($output as $line)
             {

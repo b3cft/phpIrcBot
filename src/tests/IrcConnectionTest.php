@@ -483,9 +483,17 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     {
         $conn = new ircConnection($this->config, $this->socket, $this->client);
         $msg  = new ircMessage($rawMsg, 'unittest');
-        $this->socket->expects($this->once())
-            ->method('write')
-            ->with($this->equalTo($socketReply));
+        if (null !== $socketReply)
+        {
+            $this->socket->expects($this->once())
+                ->method('write')
+                ->with($this->equalTo($socketReply));
+        }
+        else
+        {
+            $this->socket->expects($this->never())
+                ->method('write');
+        }
         $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
 
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
@@ -504,7 +512,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         return array(
             array(
             ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: ?dosomething',
-            'PRIVMSG #frameworks :command failed'
+            null
             ),
             array(
             ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: join #frameworksdev',
@@ -893,9 +901,8 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
             ':b3cft!b3cft@.IP PRIVMSG #frameworks :unittest: ?dosomething',
             'unittest'
         );
-        $this->socket->expects($this->once())
-            ->method('write')
-            ->with($this->equalTo('PRIVMSG #frameworks :command failed'));
+        $this->socket->expects($this->never())
+            ->method('write');
         $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
 
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
@@ -916,9 +923,8 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
             ':b3cft!b3cft@.IP PRIVMSG unittest : ?dosomething',
             'unittest'
         );
-        $this->socket->expects($this->once())
-            ->method('write')
-            ->with($this->equalTo('PRIVMSG b3cft :command failed'));
+        $this->socket->expects($this->never())
+            ->method('write');
         $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
 
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
@@ -1213,9 +1219,8 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         );
         $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
 
-        $this->socket->expects($this->once())
-            ->method('write')
-            ->with($this->equalTo('PRIVMSG #test :command failed'));
+        $this->socket->expects($this->never())
+            ->method('write');
 
 
         $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'processMsg');
@@ -1306,11 +1311,11 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         return array(
             array(
                 '#test :?command-doesntexist',
-                '#test :command failed'
+                null,
             ),
             array(
                 'unittest :?command-doesntexist',
-                'b3cft :command failed'
+                null,
             ),
             array(
                 '#test :?command-one',
