@@ -185,6 +185,72 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that the retry count resets after proscribed time
+     *
+     * @return void
+     */
+    public function testConnectRetryCountResetsNotExpired()
+    {
+        $this->config['reconnect']           = 1;
+        $this->config['connectAttempts']     = 2;
+        $this->config['connectAttemptsMade'] = 1;
+        $this->config['connectAttemptReset'] = 900;
+        $this->config['lastConnectAttempt']  = time()-800;
+
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->assertEquals(1, $conn->reconnect);
+        $this->assertEquals(2, $conn->connectAttempts, 'Connect attempts not initialised correctly');
+        $this->assertEquals(1, $conn->connectAttemptsMade, 'Connect attempts made not initialised correctly');
+        $this->assertEquals(900, $conn->connectAttemptReset, 'Connect attempt reset timer not initialised correctly');
+
+        $this->socket->expects($this->at(0))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+
+        $this->assertEquals(2, $conn->connectAttemptsMade, 'Connect attempts not incremented after succesful connect after timer has expired');
+   }
+
+
+    /**
+     * Test that the retry count resets after proscribed time
+     *
+     * @return void
+     */
+    public function testConnectRetryCountResets()
+    {
+        $this->config['reconnect']           = 1;
+        $this->config['connectAttempts']     = 2;
+        $this->config['connectAttemptsMade'] = 1;
+        $this->config['connectAttemptReset'] = 900;
+        $this->config['lastConnectAttempt']  = time()-86400;
+
+        $conn = new ircConnection($this->config, $this->socket, $this->client);
+
+        $this->assertEquals(1, $conn->reconnect);
+        $this->assertEquals(2, $conn->connectAttempts, 'Connect attempts not initialised correctly');
+        $this->assertEquals(1, $conn->connectAttemptsMade, 'Connect attempts made not initialised correctly');
+        $this->assertEquals(900, $conn->connectAttemptReset, 'Connect attempt reset timer not initialised correctly');
+
+        $this->socket->expects($this->at(0))
+            ->method('connect')
+            ->will($this->returnValue(true));
+
+        $this->assertInstanceOf('b3cft\IrcBot\ircConnection', $conn);
+        $method = new ReflectionMethod('b3cft\IrcBot\ircConnection', 'connect');
+        $method->setAccessible(true);
+        $method->invoke($conn);
+
+        $this->assertEquals(1, $conn->connectAttemptsMade, 'Connect attempts made not reset after succesful connect after timer has expired');
+   }
+
+
+    /**
      * Test a full connect and with a failed login
      *
      * @return void

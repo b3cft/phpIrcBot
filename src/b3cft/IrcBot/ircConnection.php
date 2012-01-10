@@ -82,11 +82,14 @@ class ircConnection
     private $reconnectwait       = 2;
     private $connectAttemptsMade = 0;
     private $connectAttempts     = 2;
+    private $connectAttemptReset = 900;
+    private $lastConnectAttempt;
     private $join;
     private $nicks;
     private $nick;
     private $pass;
     private $serverPass;
+
     /**
      * Socket Connection
      *
@@ -131,7 +134,6 @@ class ircConnection
         $this->socket               = $socket;
         $this->user                 = $configuration[self::USER];
         $this->connected            = false;
-        $this->connectAttemptsMade  = 0;
         $this->join                 = (false === empty($configuration[self::JOIN]))
                                       ? array_flip(explode(',', $configuration[self::JOIN]))
                                       : array();
@@ -179,10 +181,15 @@ class ircConnection
     {
         while(false === $this->connected && $this->connectAttemptsMade <= $this->connectAttempts)
         {
+            if (time() - $this->connectAttemptReset > $this->lastConnectAttempt)
+            {
+                $this->connectAttemptsMade = 0;
+            }
             if (0 === $this->connectAttemptsMade)
             {
                 $this->debugPrint('Connecting...');
                 $this->connectAttemptsMade++;
+                $this->lastConnectAttempt = time();
                 $this->connected = $this->socket->connect();
             }
             else if (false === $this->connected && 1 == $this->reconnect)
@@ -190,6 +197,7 @@ class ircConnection
                 $this->debugPrint("Sleeping for $this->reconnectwait seconds...");
                 sleep($this->reconnectwait);
                 $this->connectAttemptsMade++;
+                $this->lastConnectAttempt = time();
                 $this->connected = $this->socket->connect();
             }
             else if (0 == $this->reconnect || $this->connectAttemptsMade >= $this->connectAttempts)
