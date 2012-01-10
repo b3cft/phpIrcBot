@@ -200,9 +200,9 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $conn = new ircConnection($this->config, $this->socket, $this->client);
 
         $this->assertEquals(1, $conn->reconnect);
-        $this->assertEquals(2, $conn->connectAttempts, 'Connect attempts not initialised correctly');
-        $this->assertEquals(1, $conn->connectAttemptsMade, 'Connect attempts made not initialised correctly');
-        $this->assertEquals(900, $conn->connectAttemptReset, 'Connect attempt reset timer not initialised correctly');
+        $this->assertEquals(2, $conn->connectAttempts, 'init');
+        $this->assertEquals(1, $conn->connectAttemptsMade, 'init');
+        $this->assertEquals(900, $conn->connectAttemptReset, 'init');
 
         $this->socket->expects($this->at(0))
             ->method('connect')
@@ -213,7 +213,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->setAccessible(true);
         $method->invoke($conn);
 
-        $this->assertEquals(2, $conn->connectAttemptsMade, 'Connect attempts not incremented after succesful connect after timer has expired');
+        $this->assertEquals(2, $conn->connectAttemptsMade, 'reset');
    }
 
 
@@ -233,9 +233,9 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $conn = new ircConnection($this->config, $this->socket, $this->client);
 
         $this->assertEquals(1, $conn->reconnect);
-        $this->assertEquals(2, $conn->connectAttempts, 'Connect attempts not initialised correctly');
-        $this->assertEquals(1, $conn->connectAttemptsMade, 'Connect attempts made not initialised correctly');
-        $this->assertEquals(900, $conn->connectAttemptReset, 'Connect attempt reset timer not initialised correctly');
+        $this->assertEquals(2, $conn->connectAttempts, 'init');
+        $this->assertEquals(1, $conn->connectAttemptsMade, 'init');
+        $this->assertEquals(900, $conn->connectAttemptReset, 'init');
 
         $this->socket->expects($this->at(0))
             ->method('connect')
@@ -246,7 +246,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->setAccessible(true);
         $method->invoke($conn);
 
-        $this->assertEquals(1, $conn->connectAttemptsMade, 'Connect attempts made not reset after succesful connect after timer has expired');
+        $this->assertEquals(1, $conn->connectAttemptsMade, 'reset');
    }
 
 
