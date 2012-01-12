@@ -120,6 +120,8 @@ class responsesTest extends PHPUnit_Framework_TestCase
      */
     public function testResponses($message, $responses)
     {
+        $this->config['paranoia'] = 0;
+
         $plugin = new responses($this->client, $this->config);
 
         if (true === is_null($responses))
@@ -183,6 +185,14 @@ class responsesTest extends PHPUnit_Framework_TestCase
                 "PRIVMSG #test :\001ACTION gets out stopwatch\001",
             ),
             array(
+                ':one!one@1.2.3 PRIVMSG unit :thanks',
+                "/^PRIVMSG one :/",
+            ),
+            array(
+                ':one!one@1.2.3 PRIVMSG unit :thank you',
+                "/^PRIVMSG one :/",
+            ),
+            array(
                 ':one!one@1.2.3 PRIVMSG #test :unit thanks',
                 "/^PRIVMSG #test :/",
             ),
@@ -198,6 +208,10 @@ class responsesTest extends PHPUnit_Framework_TestCase
                 ':one!one@1.2.3 PRIVMSG #test :thank you unit',
                 "/^PRIVMSG #test :/",
             ),
-       );
+            array(
+                ':one!one@1.2.3 PRIVMSG #test :wonders what unit is up to...',
+                "/^PRIVMSG #test :/",
+            ),
+        );
     }
 }

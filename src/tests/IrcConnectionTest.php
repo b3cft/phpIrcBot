@@ -214,7 +214,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->invoke($conn);
 
         $this->assertEquals(2, $conn->connectAttemptsMade, 'reset');
-   }
+    }
 
 
     /**
@@ -247,7 +247,7 @@ class IrcConnectionTest extends PHPUnit_Framework_TestCase
         $method->invoke($conn);
 
         $this->assertEquals(1, $conn->connectAttemptsMade, 'reset');
-   }
+    }
 
 
     /**

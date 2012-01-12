@@ -121,6 +121,10 @@ class ircMessage
                             $this->message = trim($match[1]);
                             $this->isToMe  = true;
                         }
+                        else
+                        {
+                            $this->isToMe = false;
+                        }
                     }
                     else
                     {

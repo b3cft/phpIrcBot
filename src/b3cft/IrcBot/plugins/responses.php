@@ -46,7 +46,26 @@ use b3cft\IrcBot\ircMessage,
 class responses extends b3cft\IrcBot\ircPlugin
 {
 
-   /**
+
+    /**
+     * Constructor, do normal construct, then set default paranoia level.
+     *
+     * @param ircConnection $client - ircConnection client for communication
+     * @param mixed[]       $config - configuration for this plugin
+     *
+     * @return responses
+     */
+    public function __construct(ircConnection $client, array $config)
+    {
+        parent::__construct($client, $config);
+        if (false === isset($this->config['paranoia']))
+        {
+            /* Default paranoia level to 1 in 5 */
+            $this->config['paranoia'] = 5;
+        }
+    }
+
+    /**
      * Process a message
      *
      * @param ircMessage $message - message to process
@@ -57,14 +76,17 @@ class responses extends b3cft\IrcBot\ircPlugin
     {
         if ('PRIVMSG' === $message->action)
         {
-            if (true === $message->isToMe)
+            if (
+                true === $message->isToMe &&
+                0 !== preg_match('/thank(?:s|\s*you)/i', $message->message)
+            )
             {
-                if (0 !== preg_match('/thank(?:s|\s*you)/i', $message->message))
-                {
-                    $this->thanks($message);
-                }
+                $this->thanks($message);
             }
-            else if (0 !== preg_match('/thank(?:s|\s*you)\s+'.$message->nick.'/i', $message->message))
+            else if (0 !== preg_match(
+                '/thank(?:s|\s*you)\s+'.$message->nick.'/i',
+                $message->message
+            ))
             {
                 $this->thanks($message);
             }
@@ -76,27 +98,60 @@ class responses extends b3cft\IrcBot\ircPlugin
             }
             else if (0 !== preg_match(
                 '/^(?:can\s+you)?\s*(?:wait|hang\s+on)\s+a\s+(mo(?:ment)?|sec(?:ond)?|min(?:ute)?)\W*$/i',
-                 $message->message
-                ))
+                $message->message
+            ))
             {
                 $this->client->writeline(
-                   "PRIVMSG $message->channel :\001ACTION waits\001"
+                    "PRIVMSG $message->channel :\001ACTION waits\001"
                 );
             }
             else if (0 !== preg_match(
                 '/^(?:1|one)\s+(mo(?:ment)?|sec(?:ond)?|min(?:ute)?)\W*$/i',
-                 $message->message
-                ))
+                $message->message
+            ))
             {
                 $this->client->writeline(
-                   "PRIVMSG $message->channel :\001ACTION gets out stopwatch\001"
+                    "PRIVMSG $message->channel :\001ACTION gets out stopwatch\001"
                 );
+            }
+            else if (
+                false === $message->isToMe &&
+                0 !== preg_match('/'.$message->nick.'/i', $message->message
+            ))
+            {
+                $this->paranoia($message);
             }
         }
     }
 
     /**
+     * Make the bot paranoid about people talking about him.
+     *
+     * @param ircMessage $message - message being processed
+     *
+     * @return void
+     */
+    private function paranoia($message)
+    {
+        $msg = array(
+            "\001ACTION crosses self\001",
+            "\001ACTION blushes\001",
+            "\001ACTION ducks\001",
+            "\001ACTION wonders why people are talking about him\001",
+            "\001ACTION looks coyly over shoulder at $message->from\001",
+            "$message->from: you talking about me?",
+        );
+        if (0 === rand(0, $this->config['paranoia']))
+        {
+            $this->client->writeline("PRIVMSG $message->channel :".$msg[rand(0, count($msg)-1)]);
+        }
+    }
+
+
+    /**
      * Send a thank you response back to the channel.
+     *
+     * @param ircMessage $message - message being processed
      *
      * @return void
      */
@@ -106,12 +161,13 @@ class responses extends b3cft\IrcBot\ircPlugin
             "\001ACTION curtsies\001",
             "\001ACTION bows\001",
             "\001ACTION blushes\001",
-            "\001ACTION flutters eyelashes\001",
-            "\001ACTION looks coyly over shoulder\001",
+            "\001ACTION flutters eyelashes at $message->from\001",
+            "\001ACTION looks coyly over shoulder at $message->from\001",
             "always a pleasure",
+            "for you, $message->from, anytime ;-x" ,
             "no problem",
         );
-        $this->client->writeline("PRIVMSG $message->channel :".$msg[rand(0,count($msg)-1)]);
+        $this->client->writeline("PRIVMSG $message->channel :".$msg[rand(0, count($msg)-1)]);
     }
 
     /**

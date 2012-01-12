@@ -43,6 +43,17 @@
 use b3cft\IrcBot\ircMessage,
     b3cft\IrcBot\ircConnection;
 
+/**
+ * Pluging to ircbot that welcomes users to a channel the first time the bot sees them.
+ * Users permitted to update the welcomeTopic.
+ *
+ * @category   PHP
+ * @package    b3cft
+ * @subpackage IrcBot
+ * @author     Andy 'Bob' Brockhurst, <andy.brockhurst@b3cft.com>
+ * @license    http://www.opensource.org/licenses/bsd-license.php  BSD License
+ * @link       http://github.com/b3cft/phpIRCBot
+ */
 class welcomer extends b3cft\IrcBot\ircPlugin
 {
 
