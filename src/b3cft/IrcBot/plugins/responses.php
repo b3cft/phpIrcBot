@@ -97,7 +97,10 @@ class responses extends b3cft\IrcBot\ircPlugin
                 );
             }
             else if (0 !== preg_match(
-                '/^(?:can\s+you)?\s*(?:wait|hang\s+on)\s+a\s+(mo(?:ment)?|sec(?:ond)?|min(?:ute)?)\W*$/i',
+                '/^(?:can\s+you)?\s*
+                (?:wait|hang\s+on)\s+
+                a\s+
+                (mo(?:ment)?|sec(?:ond)?|min(?:ute)?)\W*$/ix',
                 $message->message
             ))
             {
@@ -116,8 +119,8 @@ class responses extends b3cft\IrcBot\ircPlugin
             }
             else if (
                 false === $message->isToMe &&
-                0 !== preg_match('/'.$message->nick.'/i', $message->message
-            ))
+                0 !== preg_match('/'.$message->nick.'/i', $message->message)
+            )
             {
                 $this->paranoia($message);
             }
